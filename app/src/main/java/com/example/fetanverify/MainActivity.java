@@ -21,7 +21,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.journeyapps.barcodescanner.CaptureActivity;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private static final int SCAN_REQUEST_CODE = 0x0000c0de;
@@ -32,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<HistoryItem> historyList;
     private FirebaseAuth mAuth;
     private ActivityResultLauncher<Intent> scanLauncher;
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,8 +64,7 @@ public class MainActivity extends AppCompatActivity {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         String transactionId = result.getData().getStringExtra("SCAN_RESULT");
                         if (transactionId != null) {
-                            transactionIdEditText.setText(transactionId.trim());
-                            verifyTransaction(transactionId.trim());
+                            verifyTransaction(transactionId.trim()); // Auto-verify on scan
                         } else {
                             Toast.makeText(this, "No scan data received", Toast.LENGTH_SHORT).show();
                         }
@@ -105,18 +108,18 @@ public class MainActivity extends AppCompatActivity {
                     String sender = snapshot.child("sender").getValue(String.class);
                     Long timestampLong = snapshot.child("timestamp").getValue(Long.class);
                     if (sender != null && timestampLong != null) {
-                        String timestamp = String.valueOf(timestampLong); // Convert Long to String for display
+                        String timestamp = dateFormat.format(new Date(timestampLong)); // Human-readable timestamp
                         HistoryItem item = new HistoryItem(transactionId, "Verified", timestamp);
                         historyList.add(0, item);
-                        Toast.makeText(MainActivity.this, "Verification Successful: Verified", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Verification Successful: \u2713", Toast.LENGTH_SHORT).show();
                         resultTextView.setVisibility(View.VISIBLE);
-                        resultTextView.setText("Sender: " + sender + "\nTimestamp: " + timestamp);
+                        resultTextView.setText("\u2713 Verified\nSender: " + sender + "\nTimestamp: " + timestamp);
                         return;
                     }
                 }
-                Toast.makeText(MainActivity.this, "Verification Failed: Invalid ID", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Verification Failed: \u2717", Toast.LENGTH_SHORT).show();
                 resultTextView.setVisibility(View.VISIBLE);
-                resultTextView.setText("Invalid Transaction ID");
+                resultTextView.setText("\u2717 Failed\nInvalid Transaction ID");
             }
 
             @Override

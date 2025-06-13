@@ -6,19 +6,19 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.List;
+import java.util.ArrayList;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder> {
-    private List<HistoryItem> historyList;
+    private ArrayList<HistoryItem> historyList;
 
-    public HistoryAdapter(List<HistoryItem> historyList) {
+    public HistoryAdapter(ArrayList<HistoryItem> historyList) {
         this.historyList = historyList;
     }
 
     @NonNull
     @Override
     public HistoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.history_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, parent, false);
         return new HistoryViewHolder(view);
     }
 
@@ -28,6 +28,10 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         holder.transactionIdTextView.setText("Transaction ID: " + item.getTransactionId());
         holder.statusTextView.setText("Status: " + item.getStatus());
         holder.timestampTextView.setText("Timestamp: " + item.getTimestamp());
+        holder.itemView.setBackgroundColor(0xFFFFFFFF); // Optional: Ensure background is white for contrast
+        holder.transactionIdTextView.setTextColor(0xFF000000); // Black
+        holder.statusTextView.setTextColor(0xFF000000); // Black
+        holder.timestampTextView.setTextColor(0xFF000000); // Black
     }
 
     @Override
