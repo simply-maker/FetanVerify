@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "264512569835",
+    "firebase_url": "https://myproject-514bf-default-rtdb.firebaseio.com",
+    "project_id": "myproject-514bf",
+    "storage_bucket": "myproject-514bf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:264512569835:android:7bf11427b9fb7c09a459ae",
+        "android_client_info": {
+          "package_name": "com.example.fetanverify"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "264512569835-lqm78bi8nl1elcfaq3ensdi7les3o711.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuzQhlgMNmYbPLz20rrn6fiOdSvBnMvjs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "264512569835-lqm78bi8nl1elcfaq3ensdi7les3o711.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:264512569835:android:da8d0e6705cbf296a459ae",
+        "android_client_info": {
+          "package_name": "com.example.smsfirebaseuploader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "264512569835-lqm78bi8nl1elcfaq3ensdi7les3o711.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuzQhlgMNmYbPLz20rrn6fiOdSvBnMvjs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "264512569835-lqm78bi8nl1elcfaq3ensdi7les3o711.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
