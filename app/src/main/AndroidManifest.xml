@@ -4,7 +4,6 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
         android:allowBackup="true"
@@ -39,14 +38,6 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.FetanVerify"
             tools:replace="android:screenOrientation,android:theme" />
-
-        <!-- Receiver for triggering Gebi app -->
-        <receiver android:name=".GebiTriggerReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.example.gebi.VERIFY_TRANSACTION" />
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

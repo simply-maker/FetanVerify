@@ -3,18 +3,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@color/main_background">
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Transaction ID">
+        android:hint="Transaction ID"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:boxStrokeColor="@color/primary_blue"
+        app:hintTextColor="@color/primary_blue"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/transactionIdEditText"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -22,21 +29,36 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Verify"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/primary_blue"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:paddingVertical="12dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/scanButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Scan QR Code"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/secondary_blue"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:paddingVertical="12dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/historyButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="View History"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/accent_blue"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:paddingVertical="12dp" />
 
     <TextView
         android:id="@+id/resultTextView"
@@ -45,5 +67,8 @@
         android:visibility="gone"
         android:textSize="16sp"
         android:layout_marginTop="16dp"
-        android:textColor="#000000" /> <!-- Set text color to black -->
+        android:textColor="@color/text_primary"
+        android:background="@drawable/result_background"
+        android:padding="16dp" />
+
 </LinearLayout>

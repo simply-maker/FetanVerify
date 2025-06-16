@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- Background Circle -->
+    <path
+        android:pathData="M60,60m-55,0a55,55 0,1 1,110 0a55,55 0,1 1,-110 0"
+        android:fillColor="#1976D2"/>
+    
+    <!-- Inner Circle -->
+    <path
+        android:pathData="M60,60m-45,0a45,45 0,1 1,90 0a45,45 0,1 1,-90 0"
+        android:fillColor="#2196F3"/>
+    
+    <!-- Shield Shape -->
+    <path
+        android:pathData="M60,25L40,35L40,65C40,75 50,85 60,90C70,85 80,75 80,65L80,35L60,25Z"
+        android:fillColor="#FFFFFF"/>
+    
+    <!-- Check Mark -->
+    <path
+        android:pathData="M50,55L57,62L72,47"
+        android:strokeColor="#1976D2"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="none"/>
+    
+    <!-- Small decorative elements -->
+    <circle
+        android:cx="35"
+        android:cy="35"
+        android:r="3"
+        android:fillColor="#BBDEFB"/>
+    
+    <circle
+        android:cx="85"
+        android:cy="35"
+        android:r="3"
+        android:fillColor="#BBDEFB"/>
+    
+    <circle
+        android:cx="35"
+        android:cy="85"
+        android:r="3"
+        android:fillColor="#BBDEFB"/>
+    
+    <circle
+        android:cx="85"
+        android:cy="85"
+        android:r="3"
+        android:fillColor="#BBDEFB"/>
+</vector>

@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
+import android.widget.CheckBox;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
@@ -16,9 +16,14 @@ import com.google.firebase.auth.FirebaseUser;
 public class LoginActivity extends AppCompatActivity {
     private TextInputEditText emailEditText, passwordEditText;
     private TextInputLayout emailLayout, passwordLayout;
-    private MaterialButton loginButton, registerButton;
+    private MaterialButton loginButton;
+    private CheckBox rememberMeCheckBox;
     private FirebaseAuth mAuth;
     private SharedPreferences sharedPreferences;
+    private static final String REMEMBER_PREFS = "RememberPrefs";
+    private static final String REMEMBER_EMAIL = "email";
+    private static final String REMEMBER_PASSWORD = "password";
+    private static final String REMEMBER_CHECKED = "rememberChecked";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
-        sharedPreferences = getSharedPreferences("FetanVerifyPrefs", MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences(REMEMBER_PREFS, MODE_PRIVATE);
         
         // Check if user is already logged in
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -43,7 +48,10 @@ public class LoginActivity extends AppCompatActivity {
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
         loginButton = findViewById(R.id.loginButton);
-        registerButton = findViewById(R.id.registerButton);
+        rememberMeCheckBox = findViewById(R.id.rememberMeCheckBox);
+
+        // Load remembered credentials
+        loadRememberedCredentials();
 
         loginButton.setOnClickListener(v -> {
             String email = emailEditText.getText().toString().trim();
@@ -73,6 +81,18 @@ public class LoginActivity extends AppCompatActivity {
                             // Save login state
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putBoolean("stay_logged_in", true);
+                            
+                            // Save credentials if remember me is checked
+                            if (rememberMeCheckBox.isChecked()) {
+                                editor.putString(REMEMBER_EMAIL, email);
+                                editor.putString(REMEMBER_PASSWORD, password);
+                                editor.putBoolean(REMEMBER_CHECKED, true);
+                            } else {
+                                // Clear remembered credentials if unchecked
+                                editor.remove(REMEMBER_EMAIL);
+                                editor.remove(REMEMBER_PASSWORD);
+                                editor.putBoolean(REMEMBER_CHECKED, false);
+                            }
                             editor.apply();
                             
                             startActivity(new Intent(LoginActivity.this, MainActivity.class));
@@ -82,9 +102,19 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     });
         });
+    }
 
-        registerButton.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-        });
+    private void loadRememberedCredentials() {
+        String rememberedEmail = sharedPreferences.getString(REMEMBER_EMAIL, "");
+        String rememberedPassword = sharedPreferences.getString(REMEMBER_PASSWORD, "");
+        boolean wasRememberChecked = sharedPreferences.getBoolean(REMEMBER_CHECKED, false);
+        
+        if (!rememberedEmail.isEmpty()) {
+            emailEditText.setText(rememberedEmail);
+        }
+        if (!rememberedPassword.isEmpty()) {
+            passwordEditText.setText(rememberedPassword);
+        }
+        rememberMeCheckBox.setChecked(wasRememberChecked);
     }
 }

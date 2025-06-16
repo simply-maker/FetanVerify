@@ -1,7 +1,7 @@
 package com.example.fetanverify;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -29,6 +29,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 
 public class MainActivity extends AppCompatActivity {
     private static final int SCAN_REQUEST_CODE = 0x0000c0de;
@@ -37,11 +40,14 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton verifyButton, scanButton, historyButton;
     private DatabaseReference databaseReference;
     private ArrayList<HistoryItem> historyList;
-    private Set<String> verifiedTransactionIds; // Track verified transaction IDs
+    private Set<String> verifiedTransactionIds;
     private FirebaseAuth mAuth;
     private ActivityResultLauncher<Intent> scanLauncher;
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault());
-    private boolean isVerifying = false;
+    private SharedPreferences historyPrefs;
+    private static final String HISTORY_PREFS = "HistoryPrefs";
+    private static final String HISTORY_LIST_KEY = "historyList";
+    private static final String VERIFIED_IDS_KEY = "verifiedIds";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +69,10 @@ public class MainActivity extends AppCompatActivity {
         historyButton = findViewById(R.id.historyButton);
 
         databaseReference = FirebaseDatabase.getInstance().getReference("users").child(currentUser.getUid()).child("sms_messages");
-        historyList = new ArrayList<>();
-        verifiedTransactionIds = new HashSet<>();
+        
+        // Initialize SharedPreferences for persistent history
+        historyPrefs = getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE);
+        loadHistoryFromPrefs();
 
         scanLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -72,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                         String transactionId = result.getData().getStringExtra("SCAN_RESULT");
                         if (transactionId != null) {
                             transactionIdEditText.setText(transactionId.trim());
-                            verifyTransaction(transactionId.trim()); // Auto-verify on scan
+                            verifyTransaction(transactionId.trim());
                         } else {
                             Toast.makeText(this, "No scan data received", Toast.LENGTH_SHORT).show();
                         }
@@ -105,9 +113,48 @@ public class MainActivity extends AppCompatActivity {
             intent.putParcelableArrayListExtra("historyList", historyList);
             startActivity(intent);
         });
+    }
 
-        // Try to trigger Gebi app if available
-        tryTriggerGebiApp();
+    private void loadHistoryFromPrefs() {
+        historyList = new ArrayList<>();
+        verifiedTransactionIds = new HashSet<>();
+        
+        // Load history list
+        String historyJson = historyPrefs.getString(HISTORY_LIST_KEY, "");
+        if (!historyJson.isEmpty()) {
+            Gson gson = new Gson();
+            Type type = new TypeToken<ArrayList<HistoryItem>>(){}.getType();
+            ArrayList<HistoryItem> savedHistory = gson.fromJson(historyJson, type);
+            if (savedHistory != null) {
+                historyList.addAll(savedHistory);
+            }
+        }
+        
+        // Load verified IDs set
+        String verifiedIdsJson = historyPrefs.getString(VERIFIED_IDS_KEY, "");
+        if (!verifiedIdsJson.isEmpty()) {
+            Gson gson = new Gson();
+            Type type = new TypeToken<HashSet<String>>(){}.getType();
+            HashSet<String> savedIds = gson.fromJson(verifiedIdsJson, type);
+            if (savedIds != null) {
+                verifiedTransactionIds.addAll(savedIds);
+            }
+        }
+    }
+
+    private void saveHistoryToPrefs() {
+        SharedPreferences.Editor editor = historyPrefs.edit();
+        Gson gson = new Gson();
+        
+        // Save history list
+        String historyJson = gson.toJson(historyList);
+        editor.putString(HISTORY_LIST_KEY, historyJson);
+        
+        // Save verified IDs set
+        String verifiedIdsJson = gson.toJson(verifiedTransactionIds);
+        editor.putString(VERIFIED_IDS_KEY, verifiedIdsJson);
+        
+        editor.apply();
     }
 
     private void hideKeyboard() {
@@ -117,29 +164,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setVerifyingState(boolean verifying) {
-        isVerifying = verifying;
-        verifyButton.setEnabled(!verifying);
-        scanButton.setEnabled(!verifying);
-        
-        if (verifying) {
-            verifyButton.setText("Verifying...");
-        } else {
-            verifyButton.setText("Verify");
-        }
-    }
-
     private void verifyTransaction(String transactionId) {
-        if (isVerifying) return;
-        
-        setVerifyingState(true);
-        
         Query query = databaseReference.orderByChild("transactionId").equalTo(transactionId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                setVerifyingState(false);
-                
                 TextView resultTextView = findViewById(R.id.resultTextView);
                 boolean isVerified = false;
                 String sender = null;
@@ -161,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
                         HistoryItem item = new HistoryItem(transactionId, "Verified", timestamp);
                         historyList.add(0, item);
                         verifiedTransactionIds.add(transactionId);
+                        saveHistoryToPrefs(); // Save to persistent storage
                     }
                     
                     resultTextView.setVisibility(View.VISIBLE);
@@ -179,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                setVerifyingState(false);
                 TextView resultTextView = findViewById(R.id.resultTextView);
                 resultTextView.setVisibility(View.VISIBLE);
                 resultTextView.setText("Error: " + databaseError.getMessage());
@@ -188,43 +217,5 @@ public class MainActivity extends AppCompatActivity {
                 VerificationPopup.showErrorPopup(MainActivity.this, "Database Error");
             }
         });
-    }
-
-    private void tryTriggerGebiApp() {
-        try {
-            // Try to launch Gebi app to keep it active
-            PackageManager pm = getPackageManager();
-            Intent launchIntent = pm.getLaunchIntentForPackage("com.example.gebi"); // Replace with actual Gebi package name
-            
-            if (launchIntent != null) {
-                // Add flags to bring app to background without showing UI
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                launchIntent.putExtra("trigger_background_service", true);
-                startActivity(launchIntent);
-            }
-        } catch (Exception e) {
-            // Gebi app not found or can't be launched
-            // This is expected if the app is not installed
-        }
-    }
-
-    private void triggerGebiAppForTransaction(String transactionId) {
-        try {
-            Intent intent = new Intent();
-            intent.setAction("com.example.gebi.VERIFY_TRANSACTION");
-            intent.putExtra("transaction_id", transactionId);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            sendBroadcast(intent);
-        } catch (Exception e) {
-            // Handle silently
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Trigger Gebi app when this app becomes active
-        tryTriggerGebiApp();
     }
 }
