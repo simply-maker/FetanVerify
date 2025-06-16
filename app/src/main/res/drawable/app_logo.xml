@@ -27,30 +27,22 @@
         android:strokeWidth="4"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:fillColor="none"/>
+        android:fillColor="#00000000"/>
     
-    <!-- Small decorative elements -->
-    <circle
-        android:cx="35"
-        android:cy="35"
-        android:r="3"
+    <!-- Small decorative elements as paths instead of circles -->
+    <path
+        android:pathData="M35,35m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
         android:fillColor="#BBDEFB"/>
     
-    <circle
-        android:cx="85"
-        android:cy="35"
-        android:r="3"
+    <path
+        android:pathData="M85,35m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
         android:fillColor="#BBDEFB"/>
     
-    <circle
-        android:cx="35"
-        android:cy="85"
-        android:r="3"
+    <path
+        android:pathData="M35,85m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
         android:fillColor="#BBDEFB"/>
     
-    <circle
-        android:cx="85"
-        android:cy="85"
-        android:r="3"
+    <path
+        android:pathData="M85,85m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
         android:fillColor="#BBDEFB"/>
 </vector>
