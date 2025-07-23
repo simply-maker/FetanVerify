@@ -1,29 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/surface_light">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary" />
+        android:background="@color/primary_blue"
+        app:title="Transaction History"
+        app:titleTextColor="@color/white"
+        app:navigationIcon="@android:drawable/ic_menu_revert"
+        app:navigationIconTint="@color/white" />
 
-    <TextView
-        android:id="@+id/emptyTextView"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No history available"
-        android:visibility="gone"
-        android:textColor="#000000"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:layout_marginTop="16dp" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/historyRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        <TextView
+            android:id="@+id/emptyTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No transaction history available"
+            android:visibility="gone"
+            android:textColor="@color/text_secondary"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:layout_marginTop="32dp"
+            android:drawableTop="@android:drawable/ic_menu_recent_history"
+            android:drawablePadding="16dp"
+            android:drawableTint="@color/text_secondary" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/historyRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
+    </LinearLayout>
+
 </LinearLayout>
