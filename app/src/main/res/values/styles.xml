@@ -1,12 +1,37 @@
 <resources>
     <style name="Theme.FetanVerify" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/blue_500</item>
-        <item name="colorPrimaryVariant">@color/blue_700</item>
+        <item name="colorPrimary">@color/primary_green</item>
+        <item name="colorPrimaryVariant">@color/green_700</item>
         <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/blue_200</item>
-        <item name="colorSecondaryVariant">@color/blue_800</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <item name="android:statusBarColor">@color/blue_700</item>
-        <item name="android:windowBackground">@color/gray_background</item>
+        <item name="colorSecondary">@color/accent_green</item>
+        <item name="colorSecondaryVariant">@color/green_800</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:statusBarColor">@color/primary_green</item>
+        <item name="android:windowBackground">@color/main_background</item>
+        <item name="android:navigationBarColor">@color/primary_green</item>
+    </style>
+
+    <style name="ModernButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="ModernCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">8dp</item>
+        <item name="cardBackgroundColor">@color/card_background</item>
+    </style>
+
+    <style name="ModernTextInput" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+        <item name="boxStrokeWidth">2dp</item>
     </style>
 </resources>

@@ -1,95 +1,145 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center"
-    android:background="@color/login_background">
+    android:background="@color/login_background"
+    android:fillViewport="true">
 
-    <!-- Logo -->
-    <ImageView
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@drawable/app_logo"
-        android:layout_marginBottom="24dp"
-        android:contentDescription="FetanVerify Logo" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="FetanVerify"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        android:textColor="@color/primary_blue"
-        android:layout_marginBottom="8dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Secure Transaction Verification"
-        android:textSize="14sp"
-        android:textColor="@color/text_secondary"
-        android:layout_marginBottom="48dp" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/emailLayout"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Email"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        app:boxStrokeColor="@color/primary_blue"
-        app:hintTextColor="@color/primary_blue"
-        xmlns:app="http://schemas.android.com/apk/res-auto">
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/emailEditText"
+        <!-- Logo Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_marginBottom="32dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="12dp"
+            app:cardBackgroundColor="@color/white">
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:src="@drawable/app_logo"
+                android:contentDescription="FetanVerify Logo" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- App Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FetanVerify"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary_green"
+            android:layout_marginBottom="8dp"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Secure Transaction Verification"
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="48dp"
+            android:gravity="center" />
+
+        <!-- Login Form Card -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"
-            android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_secondary" />
-    </com.google.android.material.textfield.TextInputLayout>
+            style="@style/ModernCard"
+            android:layout_marginBottom="24dp">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/passwordLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Password"
-        android:layout_marginTop="16dp"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        app:boxStrokeColor="@color/primary_blue"
-        app:hintTextColor="@color/primary_blue">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/passwordEditText"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/emailLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Email Address"
+                    style="@style/ModernTextInput"
+                    app:boxStrokeColor="@color/primary_green"
+                    app:hintTextColor="@color/primary_green"
+                    app:startIconDrawable="@android:drawable/ic_dialog_email"
+                    app:startIconTint="@color/primary_green">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/emailEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textEmailAddress"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/passwordLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Password"
+                    android:layout_marginTop="16dp"
+                    style="@style/ModernTextInput"
+                    app:boxStrokeColor="@color/primary_green"
+                    app:hintTextColor="@color/primary_green"
+                    app:startIconDrawable="@android:drawable/ic_lock_lock"
+                    app:startIconTint="@color/primary_green"
+                    app:endIconMode="password_toggle"
+                    app:endIconTint="@color/primary_green">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/passwordEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <CheckBox
+                    android:id="@+id/rememberMeCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Remember me"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="16dp"
+                    android:layout_gravity="start"
+                    android:buttonTint="@color/primary_green" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/loginButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Sign In"
+                    android:layout_marginTop="24dp"
+                    style="@style/ModernButton"
+                    android:backgroundTint="@color/primary_green"
+                    android:textColor="@color/white" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Privacy Notice -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"
-            android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_secondary" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:text="🔒 Your data is encrypted and secure. We prioritize your privacy and never share your information with third parties."
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:gravity="center"
+            android:padding="16dp"
+            android:background="@drawable/privacy_background"
+            android:layout_marginTop="16dp" />
 
-    <CheckBox
-        android:id="@+id/rememberMeCheckBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Remember me"
-        android:textColor="@color/text_primary"
-        android:layout_marginTop="16dp"
-        android:layout_gravity="start"
-        android:buttonTint="@color/primary_blue" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/loginButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Login"
-        android:layout_marginTop="24dp"
-        android:paddingVertical="12dp"
-        android:backgroundTint="@color/primary_blue"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:textStyle="bold" />
-
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

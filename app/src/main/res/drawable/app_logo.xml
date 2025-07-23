@@ -5,44 +5,73 @@
     android:viewportWidth="120"
     android:viewportHeight="120">
     
-    <!-- Background Circle -->
+    <!-- Background with gradient effect -->
     <path
-        android:pathData="M60,60m-55,0a55,55 0,1 1,110 0a55,55 0,1 1,-110 0"
-        android:fillColor="#1976D2"/>
+        android:pathData="M20,20 L100,20 Q110,20 110,30 L110,90 Q110,100 100,100 L30,100 Q20,100 20,90 Z"
+        android:fillColor="#1DB584"/>
     
-    <!-- Inner Circle -->
+    <!-- Darker gradient overlay -->
     <path
-        android:pathData="M60,60m-45,0a45,45 0,1 1,90 0a45,45 0,1 1,-90 0"
-        android:fillColor="#2196F3"/>
+        android:pathData="M20,20 L100,20 Q110,20 110,30 L110,90 Q110,100 100,100 L30,100 Q20,100 20,90 Z"
+        android:fillColor="#17A077"
+        android:fillAlpha="0.3"/>
     
-    <!-- Shield Shape -->
+    <!-- User icon -->
     <path
-        android:pathData="M60,25L40,35L40,65C40,75 50,85 60,90C70,85 80,75 80,65L80,35L60,25Z"
+        android:pathData="M35,45 Q35,35 45,35 Q55,35 55,45 Q55,55 45,55 Q35,55 35,45 Z"
         android:fillColor="#FFFFFF"/>
     
-    <!-- Check Mark -->
     <path
-        android:pathData="M50,55L57,62L72,47"
-        android:strokeColor="#1976D2"
-        android:strokeWidth="4"
+        android:pathData="M25,75 Q25,65 35,65 L55,65 Q65,65 65,75 L65,85 L25,85 Z"
+        android:fillColor="#FFFFFF"/>
+    
+    <!-- QR Code pattern -->
+    <path
+        android:pathData="M70,35 L85,35 L85,50 L70,50 Z"
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#1DB584"
+        android:strokeWidth="2"/>
+    
+    <path
+        android:pathData="M72,37 L75,37 L75,40 L72,40 Z"
+        android:fillColor="#1DB584"/>
+    
+    <path
+        android:pathData="M82,37 L85,37 L85,40 L82,40 Z"
+        android:fillColor="#1DB584"/>
+    
+    <path
+        android:pathData="M72,47 L75,47 L75,50 L72,50 Z"
+        android:fillColor="#1DB584"/>
+    
+    <path
+        android:pathData="M82,47 L85,47 L85,50 L82,50 Z"
+        android:fillColor="#1DB584"/>
+    
+    <!-- Small QR elements -->
+    <path
+        android:pathData="M77,39 L79,39 L79,41 L77,41 Z"
+        android:fillColor="#1DB584"/>
+    
+    <path
+        android:pathData="M75,42 L77,42 L77,44 L75,44 Z"
+        android:fillColor="#1DB584"/>
+    
+    <path
+        android:pathData="M79,44 L81,44 L81,46 L79,46 Z"
+        android:fillColor="#1DB584"/>
+    
+    <!-- Check mark circle -->
+    <path
+        android:pathData="M85,65 Q95,65 95,75 Q95,85 85,85 Q75,85 75,75 Q75,65 85,65 Z"
+        android:fillColor="#FFFFFF"/>
+    
+    <!-- Check mark -->
+    <path
+        android:pathData="M80,75 L83,78 L90,71"
+        android:strokeColor="#1DB584"
+        android:strokeWidth="3"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000"/>
-    
-    <!-- Small decorative elements as paths instead of circles -->
-    <path
-        android:pathData="M35,35m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
-        android:fillColor="#BBDEFB"/>
-    
-    <path
-        android:pathData="M85,35m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
-        android:fillColor="#BBDEFB"/>
-    
-    <path
-        android:pathData="M35,85m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
-        android:fillColor="#BBDEFB"/>
-    
-    <path
-        android:pathData="M85,85m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"
-        android:fillColor="#BBDEFB"/>
 </vector>

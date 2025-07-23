@@ -2,6 +2,7 @@ package com.example.fetanverify;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -12,9 +13,10 @@ public class HistoryActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private HistoryAdapter adapter;
     private ArrayList<HistoryItem> historyList;
+    private LinearLayout emptyStateLayout;
 
     @Override
-    @SuppressWarnings("deprecation") // Apply suppression to the method
+    @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
@@ -26,16 +28,20 @@ public class HistoryActivity extends AppCompatActivity {
         }
 
         recyclerView = findViewById(R.id.historyRecyclerView);
+        emptyStateLayout = findViewById(R.id.emptyStateLayout);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         historyList = getIntent().getParcelableArrayListExtra("historyList");
         if (historyList == null) {
             historyList = new ArrayList<>();
-            findViewById(R.id.emptyTextView).setVisibility(View.VISIBLE);
-        } else if (historyList.isEmpty()) {
-            findViewById(R.id.emptyTextView).setVisibility(View.VISIBLE);
+        }
+
+        if (historyList.isEmpty()) {
+            emptyStateLayout.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
         } else {
-            findViewById(R.id.emptyTextView).setVisibility(View.GONE);
+            emptyStateLayout.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
         }
 
         adapter = new HistoryAdapter(historyList);

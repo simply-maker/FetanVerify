@@ -25,13 +25,17 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
     @Override
     public void onBindViewHolder(@NonNull HistoryViewHolder holder, int position) {
         HistoryItem item = historyList.get(position);
-        holder.transactionIdTextView.setText("Transaction ID: " + item.getTransactionId());
+        holder.transactionIdTextView.setText("ID: " + item.getTransactionId());
         holder.statusTextView.setText("Status: " + item.getStatus());
-        holder.timestampTextView.setText("Timestamp: " + item.getTimestamp());
-        holder.itemView.setBackgroundColor(0xFFFFFFFF); // Optional: Ensure background is white for contrast
-        holder.transactionIdTextView.setTextColor(0xFF000000); // Black
-        holder.statusTextView.setTextColor(0xFF000000); // Black
-        holder.timestampTextView.setTextColor(0xFF000000); // Black
+        holder.amountTextView.setText("Amount: " + item.getAmount());
+        holder.timestampTextView.setText("Time: " + item.getTimestamp());
+        
+        // Set colors based on status
+        if ("Verified".equals(item.getStatus())) {
+            holder.statusTextView.setTextColor(0xFF1DB584); // Green
+        } else {
+            holder.statusTextView.setTextColor(0xFFE53E3E); // Red
+        }
     }
 
     @Override
@@ -40,13 +44,14 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
     }
 
     public static class HistoryViewHolder extends RecyclerView.ViewHolder {
-        TextView transactionIdTextView, statusTextView, timestampTextView;
+        TextView transactionIdTextView, statusTextView, timestampTextView, amountTextView;
 
         public HistoryViewHolder(@NonNull View itemView) {
             super(itemView);
             transactionIdTextView = itemView.findViewById(R.id.transactionIdTextView);
             statusTextView = itemView.findViewById(R.id.statusTextView);
             timestampTextView = itemView.findViewById(R.id.timestampTextView);
+            amountTextView = itemView.findViewById(R.id.amountTextView);
         }
     }
 }

@@ -1,32 +1,42 @@
 <resources>
-    <!-- Primary Colors -->
-    <color name="primary_blue">#1976D2</color>
-    <color name="secondary_blue">#2196F3</color>
-    <color name="accent_blue">#42A5F5</color>
-    <color name="blue_700">#1565C0</color>
-    <color name="blue_200">#BBDEFB</color>
-    <color name="blue_800">#0D47A1</color>
+    <!-- Primary Colors - Updated to match logo -->
+    <color name="primary_green">#1DB584</color>
+    <color name="secondary_green">#17A077</color>
+    <color name="accent_green">#26C999</color>
+    <color name="green_700">#138A6B</color>
+    <color name="green_200">#7DDCC4</color>
+    <color name="green_800">#0F6B52</color>
     
     <!-- Background Colors -->
-    <color name="login_background">#F8F9FA</color>
+    <color name="login_background">#F8FFFE</color>
     <color name="main_background">#FFFFFF</color>
     <color name="card_background">#FFFFFF</color>
+    <color name="surface_color">#F5F9F8</color>
     
     <!-- Text Colors -->
-    <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
-    <color name="text_hint">#BDBDBD</color>
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#666666</color>
+    <color name="text_hint">#999999</color>
+    <color name="text_on_primary">#FFFFFF</color>
     
     <!-- Status Colors -->
-    <color name="success_green">#4CAF50</color>
-    <color name="error_red">#F44336</color>
-    <color name="warning_orange">#FF9800</color>
+    <color name="success_green">#1DB584</color>
+    <color name="error_red">#E53E3E</color>
+    <color name="warning_orange">#FF8A00</color>
     
     <!-- Standard Colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="gray_background">#F5F5F5</color>
+    <color name="divider_color">#E0E0E0</color>
     
     <!-- Legacy Colors (keeping for compatibility) -->
     <color name="blue_500">#2196F3</color>
+    <color name="blue_700">#1565C0</color>
+    <color name="blue_200">#BBDEFB</color>
+    <color name="blue_800">#0D47A1</color>
+    
+    <!-- New modern colors -->
+    <color name="shadow_color">#1A000000</color>
+    <color name="overlay_color">#80000000</color>
 </resources>
