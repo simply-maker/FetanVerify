@@ -213,25 +213,18 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Try to extract CHE ID first (more specific)
-        String cheId = extractCHEFromText(rawData);
-        if (cheId != null) {
-            Log.d(TAG, "extractTransactionId: Found CHE ID: " + cheId);
-            return cheId;
-        }
-
-        // Try to extract CH ID
-        String chId = extractCHFromText(rawData);
-        if (chId != null) {
-            Log.d(TAG, "extractTransactionId: Found CH ID: " + chId);
-            return chId;
-        }
-
         // Try to extract FT ID
         String ftId = extractFTFromText(rawData);
         if (ftId != null) {
             Log.d(TAG, "extractTransactionId: Found FT ID: " + ftId);
             return ftId;
+        }
+
+        // Try to extract CH ID (10 characters exactly)
+        String chId = extractCHFromText(rawData);
+        if (chId != null) {
+            Log.d(TAG, "extractTransactionId: Found CH ID: " + chId);
+            return chId;
         }
 
         // Return original text if no patterns match
@@ -292,13 +285,6 @@ public class MainActivity extends AppCompatActivity {
             String decodedString = new String(decodedBytes);
             Log.d(TAG, "decodeBase64QR: Decoded to string: " + decodedString);
             
-            // Try to extract CHE ID from decoded string
-            String cheFromString = extractCHEFromText(decodedString);
-            if (cheFromString != null) {
-                Log.d(TAG, "decodeBase64QR: Found CHE ID in decoded string: " + cheFromString);
-                return cheFromString;
-            }
-            
             // Try to extract FT ID from decoded string
             String ftFromString = extractFTFromText(decodedString);
             if (ftFromString != null) {
@@ -306,8 +292,15 @@ public class MainActivity extends AppCompatActivity {
                 return ftFromString;
             }
             
-            Log.d(TAG, "decodeBase64QR: No transaction ID patterns found, returning null");
-            return null;
+            // Try to extract CH ID from decoded string
+            String chFromString = extractCHFromText(decodedString);
+            if (chFromString != null) {
+                Log.d(TAG, "decodeBase64QR: Found CH ID in decoded string: " + chFromString);
+                return chFromString;
+            }
+            
+            Log.d(TAG, "decodeBase64QR: No transaction ID patterns found, returning raw decoded string");
+            return decodedString; // Return raw decoded string if no pattern matches
             
         } catch (Exception e) {
             Log.e(TAG, "decodeBase64QR: Error decoding Base64: " + e.getMessage());
@@ -319,8 +312,24 @@ public class MainActivity extends AppCompatActivity {
         try {
             Log.d(TAG, "extractTransactionFromHex: Processing hex data: " + hexData);
             
-            // Look for CHE pattern in hex (CHE = 434845)
-            java.util.regex.Pattern cheHexPattern = java.util.regex.Pattern.compile("434845([0-9A-F]+)");
+            // Look for CH pattern in hex (CH = 4348)
+            java.util.regex.Pattern chHexPattern = java.util.regex.Pattern.compile("4348([0-9A-F]{16})"); // CH + 8 hex chars = 10 total chars
+            java.util.regex.Matcher chMatcher = chHexPattern.matcher(hexData.toUpperCase());
+            
+            if (chMatcher.find()) {
+                String chHexMatch = chMatcher.group();
+                Log.d(TAG, "extractTransactionFromHex: Found CH hex pattern: " + chHexMatch);
+                
+                // Convert the hex to ASCII
+                String asciiResult = hexToAscii(chHexMatch);
+                if (asciiResult != null && asciiResult.startsWith("CH") && asciiResult.length() == 10) {
+                    Log.d(TAG, "extractTransactionFromHex: Extracted CH ID from hex: " + asciiResult);
+                    return asciiResult;
+                }
+            }
+            
+            // Look for CHE pattern in hex (CHE = 434845) - for legacy support
+            java.util.regex.Pattern cheHexPattern = java.util.regex.Pattern.compile("434845([0-9A-F]{14})"); // CHE + 7 hex chars = 10 total chars
             java.util.regex.Matcher cheMatcher = cheHexPattern.matcher(hexData.toUpperCase());
             
             if (cheMatcher.find()) {
@@ -329,10 +338,36 @@ public class MainActivity extends AppCompatActivity {
                 
                 // Convert the hex to ASCII
                 String asciiResult = hexToAscii(cheHexMatch);
-                if (asciiResult != null && asciiResult.startsWith("CHE")) {
-                    // Extract reasonable length CHE ID
-                    if (asciiResult.length() <= 15) {
-                        Log.d(TAG, "extractTransactionFromHex: Extracted CHE ID from hex: " + asciiResult);
+                if (asciiResult != null && asciiResult.startsWith("CHE") && asciiResult.length() == 10) {
+                    Log.d(TAG, "extractTransactionFromHex: Extracted CHE ID from hex: " + asciiResult);
+                    return asciiResult;
+                }
+            }
+            
+            // Try to convert entire hex to ASCII and look for patterns
+            String asciiFromHex = hexToAscii(hexData);
+            if (asciiFromHex != null) {
+                Log.d(TAG, "extractTransactionFromHex: Full ASCII from hex: " + asciiFromHex);
+                
+                // Look for CH pattern in ASCII (exactly 10 characters)
+                String chId = extractCHFromText(asciiFromHex);
+                if (chId != null) {
+                    return chId;
+                }
+                
+                // Look for FT pattern in ASCII
+                String ftId = extractFTFromText(asciiFromHex);
+                if (ftId != null) {
+                    return ftId;
+                }
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "extractTransactionFromHex: Error extracting from hex: " + e.getMessage());
+        }
+        
+        return null;
+    }
                         return asciiResult;
                     } else {
                         // Truncate to reasonable length
@@ -414,24 +449,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String extractCHEFromText(String text) {
-        if (text == null || text.isEmpty()) {
-            return null;
-        }
-        
-        String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
-        Log.d(TAG, "extractCHEFromText: Searching for CHE ID in text: " + cleanText);
-        
-        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{5,10}");
-        java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
-        if (cheMatcher.find()) {
-            String cheId = cheMatcher.group();
-            Log.d(TAG, "extractCHEFromText: Found CHE ID: " + cheId);
-            return cheId;
-        }
-        
-        return null;
-    }
 
     private String extractCHFromText(String text) {
         if (text == null || text.isEmpty()) {
@@ -441,12 +458,22 @@ public class MainActivity extends AppCompatActivity {
         String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
         Log.d(TAG, "extractCHFromText: Searching for CH ID in text: " + cleanText);
         
-        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8,12}");
+        // Look for CH followed by exactly 8 alphanumeric characters (total 10 characters)
+        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
         java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
         if (chMatcher.find()) {
             String chId = chMatcher.group();
             Log.d(TAG, "extractCHFromText: Found CH ID: " + chId);
             return chId;
+        }
+        
+        // Also look for CHE followed by exactly 7 alphanumeric characters (total 10 characters)
+        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
+        java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
+        if (cheMatcher.find()) {
+            String cheId = cheMatcher.group();
+            Log.d(TAG, "extractCHFromText: Found CHE ID: " + cheId);
+            return cheId;
         }
         
         return null;
@@ -481,12 +508,20 @@ public class MainActivity extends AppCompatActivity {
         String cleanText = smsText.toUpperCase().replaceAll("\\s+", " ");
         Log.d(TAG, "extractFTFromSMS: Searching for FT ID in text: " + cleanText);
         
+        // Look for FT ID first (priority)
         java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
         java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
         if (ftMatcher.find()) {
             String ftId = ftMatcher.group();
             Log.d(TAG, "extractFTFromSMS: Found FT ID: " + ftId);
             return ftId;
+        }
+        
+        // If no FT ID found, look for CH ID (exactly 10 characters)
+        String chId = extractCHFromText(cleanText);
+        if (chId != null) {
+            Log.d(TAG, "extractFTFromSMS: Found CH ID in SMS: " + chId);
+            return chId;
         }
         
         Log.d(TAG, "extractFTFromSMS: No FT ID found in SMS text");
@@ -681,10 +716,6 @@ public class MainActivity extends AppCompatActivity {
                     handleVerificationResult(dataSnapshot, transactionId);
                 } else {
                     // If no match found and it looks like a CH ID, show FT dialog
-                    if (transactionId.startsWith("CH")) {
-                        Log.d(TAG, "No match found for CH ID, showing FT dialog");
-                        showFTIdDialog();
-                    } else {
                         // No match found
                         Log.d(TAG, "No match found for transaction ID: " + transactionId);
                         handleVerificationFailure(transactionId);
@@ -737,9 +768,19 @@ public class MainActivity extends AppCompatActivity {
         
         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
             sender = snapshot.child("sender").getValue(String.class);
-            amount = snapshot.child("amount").getValue(String.class);
+            // Handle amount as either String or Double
+            Object amountObj = snapshot.child("amount").getValue();
+            if (amountObj instanceof String) {
+                amount = (String) amountObj;
+            } else if (amountObj instanceof Double) {
+                amount = String.valueOf(((Double) amountObj).intValue());
+            } else if (amountObj instanceof Long) {
+                amount = String.valueOf(amountObj);
+            } else if (amountObj != null) {
+                amount = amountObj.toString();
+            }
             Long timestampLong = snapshot.child("timestamp").getValue(Long.class);
-            Log.d(TAG, "Found data - Sender: " + sender + ", Amount: " + amount + ", Timestamp: " + timestampLong);
+            Log.d(TAG, "Found data - Sender: " + sender + ", Amount: " + amount + ", Timestamp: " + timestampLong + ", Amount type: " + (amountObj != null ? amountObj.getClass().getSimpleName() : "null"));
             
             if (sender != null && timestampLong != null) {
                 timestamp = dateFormat.format(new Date(timestampLong));
