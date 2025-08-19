@@ -311,47 +311,39 @@ public class MainActivity extends AppCompatActivity {
         try {
             Log.d(TAG, "extractTransactionFromHex: Processing hex data: " + hexData);
 
-            // Look for CHE pattern in hex (CHE = 434845) - more flexible matching
-            java.util.regex.Pattern cheHexPattern = java.util.regex.Pattern.compile("434845([0-9A-F]+)");
-            java.util.regex.Matcher cheMatcher = cheHexPattern.matcher(hexData.toUpperCase());
-
-            if (cheMatcher.find()) {
-                // Find the position after CHE (434845)
-                int cheStart = hexData.toUpperCase().indexOf("434845");
-                if (cheStart != -1) {
-                    // Extract from CHE onwards and convert to ASCII
-                    String cheSection = hexData.substring(cheStart);
-                    Log.d(TAG, "extractTransactionFromHex: Found CHE hex section: " + cheSection);
-                    
-                    String asciiResult = hexToAscii(cheSection);
-                    if (asciiResult != null && asciiResult.startsWith("CHE")) {
-                        // Extract exactly 10 characters for CHE ID
-                        String cheId = asciiResult.length() >= 10 ? asciiResult.substring(0, 10) : asciiResult;
-                        Log.d(TAG, "extractTransactionFromHex: Extracted CHE ID from hex: " + cheId);
-                        return cheId;
-                    }
+            // Look for CHE pattern in hex (CHE = 434845)
+            int cheHexIndex = hexData.toUpperCase().indexOf("434845");
+            if (cheHexIndex != -1) {
+                Log.d(TAG, "extractTransactionFromHex: Found CHE hex pattern at index: " + cheHexIndex);
+                
+                // Extract from CHE position onwards, but limit to reasonable length (20 hex chars = 10 ASCII chars)
+                int endIndex = Math.min(cheHexIndex + 20, hexData.length());
+                String cheSection = hexData.substring(cheHexIndex, endIndex);
+                Log.d(TAG, "extractTransactionFromHex: CHE hex section: " + cheSection);
+                
+                String asciiResult = hexToAscii(cheSection);
+                if (asciiResult != null && asciiResult.startsWith("CHE") && asciiResult.length() >= 10) {
+                    String cheId = asciiResult.substring(0, 10);
+                    Log.d(TAG, "extractTransactionFromHex: Extracted CHE ID: " + cheId);
+                    return cheId;
                 }
             }
-
-            // Look for CH pattern in hex (CH = 4348) - more flexible matching
-            java.util.regex.Pattern chHexPattern = java.util.regex.Pattern.compile("4348([0-9A-F]+)");
-            java.util.regex.Matcher chMatcher = chHexPattern.matcher(hexData.toUpperCase());
-
-            if (chMatcher.find()) {
-                // Find the position after CH (4348)
-                int chStart = hexData.toUpperCase().indexOf("4348");
-                if (chStart != -1) {
-                    // Extract from CH onwards and convert to ASCII
-                    String chSection = hexData.substring(chStart);
-                    Log.d(TAG, "extractTransactionFromHex: Found CH hex section: " + chSection);
-                    
-                    String asciiResult = hexToAscii(chSection);
-                    if (asciiResult != null && asciiResult.startsWith("CH")) {
-                        // Extract exactly 10 characters for CH ID
-                        String chId = asciiResult.length() >= 10 ? asciiResult.substring(0, 10) : asciiResult;
-                        Log.d(TAG, "extractTransactionFromHex: Extracted CH ID from hex: " + chId);
-                        return chId;
-                    }
+            
+            // Look for CH pattern in hex (CH = 4348) - only if CHE not found
+            int chHexIndex = hexData.toUpperCase().indexOf("4348");
+            if (chHexIndex != -1) {
+                Log.d(TAG, "extractTransactionFromHex: Found CH hex pattern at index: " + chHexIndex);
+                
+                // Extract from CH position onwards, but limit to reasonable length (20 hex chars = 10 ASCII chars)
+                int endIndex = Math.min(chHexIndex + 20, hexData.length());
+                String chSection = hexData.substring(chHexIndex, endIndex);
+                Log.d(TAG, "extractTransactionFromHex: CH hex section: " + chSection);
+                
+                String asciiResult = hexToAscii(chSection);
+                if (asciiResult != null && asciiResult.startsWith("CH") && asciiResult.length() >= 10) {
+                    String chId = asciiResult.substring(0, 10);
+                    Log.d(TAG, "extractTransactionFromHex: Extracted CH ID: " + chId);
+                    return chId;
                 }
             }
 
@@ -360,16 +352,10 @@ public class MainActivity extends AppCompatActivity {
             if (asciiFromHex != null) {
                 Log.d(TAG, "extractTransactionFromHex: Full ASCII from hex: " + asciiFromHex);
 
-                // Look for CHE pattern in ASCII first (priority)
+                // Look for CHE/CH patterns in the full ASCII string
                 String cheId = extractCHFromText(asciiFromHex);
                 if (cheId != null) {
                     return cheId;
-                }
-
-                // Look for CH pattern in ASCII
-                String chId = extractCHFromText(asciiFromHex);
-                if (chId != null) {
-                    return chId;
                 }
 
                 // Look for FT pattern in ASCII
@@ -416,8 +402,8 @@ public class MainActivity extends AppCompatActivity {
         String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
         Log.d(TAG, "extractCHFromText: Searching for CH ID in text: " + cleanText);
 
-        // Look for CHE followed by 7 alphanumeric characters (total 10 characters) - priority
-        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}(?![A-Z0-9])");
+        // Look for CHE followed by exactly 7 alphanumeric characters (total 10 characters) - priority
+        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
         java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
         if (cheMatcher.find()) {
             String cheId = cheMatcher.group();
@@ -425,8 +411,8 @@ public class MainActivity extends AppCompatActivity {
             return cheId;
         }
 
-        // Look for CH followed by 8 alphanumeric characters (total 10 characters)
-        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}(?![A-Z0-9])");
+        // Look for CH followed by exactly 8 alphanumeric characters (total 10 characters)
+        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
         java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
         if (chMatcher.find()) {
             String chId = chMatcher.group();
