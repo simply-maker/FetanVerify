@@ -48,8 +48,10 @@ import java.util.Set;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private static final int SCAN_REQUEST_CODE = 0x0000c0de;
     private TextInputEditText transactionIdEditText;
     private TextInputLayout textInputLayout;
@@ -115,47 +117,75 @@ public class MainActivity extends AppCompatActivity {
     private void setupLaunchers() {
         scanLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    Log.d(TAG, "QR Scan result received with code: " + result.getResultCode());
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         String transactionId = result.getData().getStringExtra("SCAN_RESULT");
+                        Log.d(TAG, "Raw QR scan result: " + transactionId);
                         if (transactionId != null) {
-                            String processedId = OCRHelper.processScannedText(transactionId.trim());
-                            transactionIdEditText.setText(processedId);
-                            verifyTransaction(processedId);
+                            try {
+                                String processedId = OCRHelper.processScannedText(transactionId.trim());
+                                Log.d(TAG, "Processed QR result: " + processedId);
+                                transactionIdEditText.setText(processedId);
+                                verifyTransaction(processedId);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error processing QR scan result: " + e.getMessage(), e);
+                                Toast.makeText(this, "Error processing QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
                         } else {
+                            Log.w(TAG, "QR scan result is null");
                             Toast.makeText(this, getString(R.string.no_scan_data), Toast.LENGTH_SHORT).show();
                         }
                     } else {
+                        Log.w(TAG, "QR scan cancelled or failed");
                         Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
                     }
                 });
 
         imageLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    Log.d(TAG, "Image import result received with code: " + result.getResultCode());
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         Uri imageUri = result.getData().getData();
+                        Log.d(TAG, "Image URI: " + imageUri);
                         if (imageUri != null) {
-                            processQRImageFromUri(imageUri);
+                            try {
+                                processQRImageFromUri(imageUri);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error processing image: " + e.getMessage(), e);
+                                Toast.makeText(this, "Error processing image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
                         }
                     }
                 });
         
         smsLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    Log.d(TAG, "SMS scan result received with code: " + result.getResultCode());
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         String scannedText = result.getData().getStringExtra("SCAN_RESULT");
+                        Log.d(TAG, "Raw SMS scan result: " + scannedText);
                         if (scannedText != null) {
-                            // For SMS scanning, we're looking for FT ID in the text content
-                            String ftId = OCRHelper.extractFTFromSMS(scannedText);
-                            if (ftId != null) {
-                                transactionIdEditText.setText(ftId);
-                                verifyTransaction(ftId);
-                            } else {
-                                Toast.makeText(this, getString(R.string.no_ft_found_in_sms), Toast.LENGTH_SHORT).show();
+                            try {
+                                // For SMS scanning, we're looking for FT ID in the text content
+                                String ftId = OCRHelper.processSMSText(scannedText);
+                                Log.d(TAG, "Extracted FT ID from SMS: " + ftId);
+                                if (ftId != null) {
+                                    transactionIdEditText.setText(ftId);
+                                    verifyTransaction(ftId);
+                                } else {
+                                    Log.w(TAG, "No FT ID found in SMS text: " + scannedText);
+                                    Toast.makeText(this, getString(R.string.no_ft_found_in_sms), Toast.LENGTH_LONG).show();
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error processing SMS scan result: " + e.getMessage(), e);
+                                Toast.makeText(this, "Error processing SMS: " + e.getMessage(), Toast.LENGTH_LONG).show();
                             }
                         } else {
+                            Log.w(TAG, "SMS scan result is null");
                             Toast.makeText(this, getString(R.string.no_scan_data), Toast.LENGTH_SHORT).show();
                         }
                     } else {
+                        Log.w(TAG, "SMS scan cancelled or failed");
                         Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -228,22 +258,29 @@ public class MainActivity extends AppCompatActivity {
     
     private void processQRImageFromUri(Uri imageUri) {
         try {
+            Log.d(TAG, "Processing QR image from URI: " + imageUri);
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+            Log.d(TAG, "Bitmap loaded successfully, size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
             String qrContent = decodeQRCode(bitmap);
+            Log.d(TAG, "QR content decoded: " + qrContent);
             if (qrContent != null) {
                 String processedId = OCRHelper.processScannedText(qrContent.trim());
+                Log.d(TAG, "Processed QR content: " + processedId);
                 transactionIdEditText.setText(processedId);
                 verifyTransaction(processedId);
             } else {
+                Log.w(TAG, "No QR code found in image");
                 Toast.makeText(this, getString(R.string.no_qr_found), Toast.LENGTH_SHORT).show();
             }
         } catch (IOException e) {
+            Log.e(TAG, "Error processing image: " + e.getMessage(), e);
             Toast.makeText(this, getString(R.string.error_processing_image), Toast.LENGTH_SHORT).show();
         }
     }
 
     private String decodeQRCode(Bitmap bitmap) {
         try {
+            Log.d(TAG, "Attempting to decode QR code from bitmap");
             int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
             bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
             
@@ -251,8 +288,11 @@ public class MainActivity extends AppCompatActivity {
             BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
             
             Result result = new MultiFormatReader().decode(binaryBitmap);
-            return result.getText();
+            String qrText = result.getText();
+            Log.d(TAG, "QR code decoded successfully: " + qrText);
+            return qrText;
         } catch (Exception e) {
+            Log.e(TAG, "Error decoding QR code: " + e.getMessage());
             return null;
         }
     }
@@ -319,6 +359,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void verifyTransaction(String transactionId) {
+        Log.d(TAG, "Starting verification for transaction ID: " + transactionId);
         showLoading(true);
         
         // First try with the original transaction ID
@@ -326,15 +367,19 @@ public class MainActivity extends AppCompatActivity {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d(TAG, "Database query completed. Data exists: " + dataSnapshot.exists());
                 if (dataSnapshot.exists()) {
                     // Found match with original ID
+                    Log.d(TAG, "Found match for transaction ID: " + transactionId);
                     handleVerificationResult(dataSnapshot, transactionId);
                 } else {
                     // If no match found and it looks like a CH ID, show FT dialog
                     if (transactionId.startsWith("CH")) {
+                        Log.d(TAG, "No match found for CH ID, showing FT dialog");
                         showFTIdDialog();
                     } else {
                         // No match found
+                        Log.d(TAG, "No match found for transaction ID: " + transactionId);
                         handleVerificationFailure(transactionId);
                     }
                 }
@@ -342,6 +387,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, "Database error: " + databaseError.getMessage());
                 showLoading(false);
                 TextView resultTextView = findViewById(R.id.resultTextView);
                 resultCard.setVisibility(View.VISIBLE);
@@ -374,6 +420,7 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void handleVerificationResult(DataSnapshot dataSnapshot, String transactionId) {
+        Log.d(TAG, "Handling verification result for: " + transactionId);
         showLoading(false);
         
         TextView resultTextView = findViewById(R.id.resultTextView);
@@ -385,6 +432,7 @@ public class MainActivity extends AppCompatActivity {
             sender = snapshot.child("sender").getValue(String.class);
             amount = snapshot.child("amount").getValue(String.class);
             Long timestampLong = snapshot.child("timestamp").getValue(Long.class);
+            Log.d(TAG, "Found data - Sender: " + sender + ", Amount: " + amount + ", Timestamp: " + timestampLong);
             
             if (sender != null && timestampLong != null) {
                 timestamp = dateFormat.format(new Date(timestampLong));
@@ -397,6 +445,7 @@ public class MainActivity extends AppCompatActivity {
             historyList.add(0, item);
             verifiedTransactionIds.add(transactionId);
             saveHistoryToPrefs();
+            Log.d(TAG, "Added transaction to history: " + transactionId);
         }
         
         resultCard.setVisibility(View.VISIBLE);
@@ -408,9 +457,11 @@ public class MainActivity extends AppCompatActivity {
         resultTextView.setText(resultText);
         
         VerificationPopup.showSuccessPopup(MainActivity.this, transactionId, sender, timestamp, amount);
+        Log.d(TAG, "Verification successful for: " + transactionId);
     }
     
     private void handleVerificationFailure(String transactionId) {
+        Log.d(TAG, "Handling verification failure for: " + transactionId);
         showLoading(false);
         TextView resultTextView = findViewById(R.id.resultTextView);
         resultCard.setVisibility(View.VISIBLE);
