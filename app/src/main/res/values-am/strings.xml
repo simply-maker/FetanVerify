@@ -71,6 +71,7 @@
     <string name="scan_sms_screenshot">FT መለያ ለማውጣት ካሜራውን በስክሪኑ ላይ ባለው SMS ጽሁፍ መልእክት ላይ ያነጣጥሩ</string>
     <string name="no_ft_found_in_sms">በSMS ጽሁፍ ውስጥ ምንም FT መለያ አልተገኘም</string>
     <string name="scanning_options">የስካን አማራጮች</string>
+    <string name="no_transaction_id_found">በተሰካነው መረጃ ውስጥ ምንም የግብይት መለያ አልተገኘም</string>
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR ማረጋገጫ አልተሳካም</string>

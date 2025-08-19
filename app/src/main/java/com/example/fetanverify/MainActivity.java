@@ -123,10 +123,15 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Raw QR scan result: " + transactionId);
                         if (transactionId != null) {
                             try {
-                                String processedId = OCRHelper.processScannedText(transactionId.trim());
-                                Log.d(TAG, "Processed QR result: " + processedId);
-                                transactionIdEditText.setText(processedId);
-                                verifyTransaction(processedId);
+                                String extractedId = extractTransactionId(transactionId.trim());
+                                Log.d(TAG, "Extracted transaction ID: " + extractedId);
+                                if (extractedId != null) {
+                                    transactionIdEditText.setText(extractedId);
+                                    verifyTransaction(extractedId);
+                                } else {
+                                    Log.w(TAG, "No transaction ID found in QR scan result");
+                                    Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_SHORT).show();
+                                }
                             } catch (Exception e) {
                                 Log.e(TAG, "Error processing QR scan result: " + e.getMessage(), e);
                                 Toast.makeText(this, "Error processing QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -166,12 +171,11 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Raw SMS scan result: " + scannedText);
                         if (scannedText != null) {
                             try {
-                                // For SMS scanning, we're looking for FT ID in the text content
-                                String ftId = OCRHelper.processSMSText(scannedText);
-                                Log.d(TAG, "Extracted FT ID from SMS: " + ftId);
-                                if (ftId != null) {
-                                    transactionIdEditText.setText(ftId);
-                                    verifyTransaction(ftId);
+                                String extractedId = extractFTFromSMS(scannedText);
+                                Log.d(TAG, "Extracted FT ID from SMS: " + extractedId);
+                                if (extractedId != null) {
+                                    transactionIdEditText.setText(extractedId);
+                                    verifyTransaction(extractedId);
                                 } else {
                                     Log.w(TAG, "No FT ID found in SMS text: " + scannedText);
                                     Toast.makeText(this, getString(R.string.no_ft_found_in_sms), Toast.LENGTH_LONG).show();
@@ -189,6 +193,304 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private String extractTransactionId(String rawData) {
+        if (rawData == null || rawData.isEmpty()) {
+            Log.d(TAG, "extractTransactionId: Input is null or empty");
+            return null;
+        }
+
+        Log.d(TAG, "extractTransactionId: Processing raw data: " + rawData);
+
+        // Check if it's Base64 encoded
+        if (isBase64(rawData)) {
+            Log.d(TAG, "extractTransactionId: Detected Base64 encoded data");
+            String decoded = decodeBase64QR(rawData);
+            if (decoded != null) {
+                Log.d(TAG, "extractTransactionId: Successfully decoded Base64 to: " + decoded);
+                return decoded;
+            }
+        }
+
+        // Try to extract CHE ID first (more specific)
+        String cheId = extractCHEFromText(rawData);
+        if (cheId != null) {
+            Log.d(TAG, "extractTransactionId: Found CHE ID: " + cheId);
+            return cheId;
+        }
+
+        // Try to extract CH ID
+        String chId = extractCHFromText(rawData);
+        if (chId != null) {
+            Log.d(TAG, "extractTransactionId: Found CH ID: " + chId);
+            return chId;
+        }
+
+        // Try to extract FT ID
+        String ftId = extractFTFromText(rawData);
+        if (ftId != null) {
+            Log.d(TAG, "extractTransactionId: Found FT ID: " + ftId);
+            return ftId;
+        }
+
+        // Return original text if no patterns match
+        Log.d(TAG, "extractTransactionId: No patterns matched, returning original text: " + rawData.trim());
+        return rawData.trim();
+    }
+
+    private boolean isBase64(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+        
+        // Remove whitespace
+        str = str.replaceAll("\\s+", "");
+        
+        // Check if it's a valid Base64 string
+        try {
+            android.util.Base64.decode(str, android.util.Base64.DEFAULT);
+            boolean isBase64 = str.length() > 20 && str.matches("^[A-Za-z0-9+/]*={0,2}$");
+            Log.d(TAG, "isBase64: String '" + str.substring(0, Math.min(20, str.length())) + "...' is Base64: " + isBase64);
+            return isBase64;
+        } catch (Exception e) {
+            Log.d(TAG, "isBase64: String is not valid Base64: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private String decodeBase64QR(String base64Data) {
+        try {
+            if (base64Data == null || base64Data.isEmpty()) {
+                Log.d(TAG, "decodeBase64QR: Input is null or empty");
+                return null;
+            }
+            
+            // Remove any whitespace
+            base64Data = base64Data.replaceAll("\\s+", "");
+            Log.d(TAG, "decodeBase64QR: Decoding Base64: " + base64Data);
+            
+            // Decode Base64
+            byte[] decodedBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT);
+            
+            // Convert to hex string for analysis
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : decodedBytes) {
+                hexString.append(String.format("%02X", b & 0xFF));
+            }
+            String hexData = hexString.toString();
+            Log.d(TAG, "decodeBase64QR: Decoded to hex: " + hexData);
+            
+            // Try to extract transaction ID from hex data
+            String transactionId = extractTransactionFromHex(hexData);
+            if (transactionId != null) {
+                Log.d(TAG, "decodeBase64QR: Successfully extracted transaction ID: " + transactionId);
+                return transactionId;
+            }
+            
+            // Also try direct string conversion
+            String decodedString = new String(decodedBytes);
+            Log.d(TAG, "decodeBase64QR: Decoded to string: " + decodedString);
+            
+            // Try to extract CHE ID from decoded string
+            String cheFromString = extractCHEFromText(decodedString);
+            if (cheFromString != null) {
+                Log.d(TAG, "decodeBase64QR: Found CHE ID in decoded string: " + cheFromString);
+                return cheFromString;
+            }
+            
+            // Try to extract FT ID from decoded string
+            String ftFromString = extractFTFromText(decodedString);
+            if (ftFromString != null) {
+                Log.d(TAG, "decodeBase64QR: Found FT ID in decoded string: " + ftFromString);
+                return ftFromString;
+            }
+            
+            Log.d(TAG, "decodeBase64QR: No transaction ID patterns found, returning null");
+            return null;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "decodeBase64QR: Error decoding Base64: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String extractTransactionFromHex(String hexData) {
+        try {
+            Log.d(TAG, "extractTransactionFromHex: Processing hex data: " + hexData);
+            
+            // Look for CHE pattern in hex (CHE = 434845)
+            java.util.regex.Pattern cheHexPattern = java.util.regex.Pattern.compile("434845([0-9A-F]+)");
+            java.util.regex.Matcher cheMatcher = cheHexPattern.matcher(hexData.toUpperCase());
+            
+            if (cheMatcher.find()) {
+                String cheHexMatch = cheMatcher.group();
+                Log.d(TAG, "extractTransactionFromHex: Found CHE hex pattern: " + cheHexMatch);
+                
+                // Convert the hex to ASCII
+                String asciiResult = hexToAscii(cheHexMatch);
+                if (asciiResult != null && asciiResult.startsWith("CHE")) {
+                    // Extract reasonable length CHE ID
+                    if (asciiResult.length() <= 15) {
+                        Log.d(TAG, "extractTransactionFromHex: Extracted CHE ID from hex: " + asciiResult);
+                        return asciiResult;
+                    } else {
+                        // Truncate to reasonable length
+                        String truncated = asciiResult.substring(0, Math.min(15, asciiResult.length()));
+                        Log.d(TAG, "extractTransactionFromHex: Truncated CHE ID: " + truncated);
+                        return truncated;
+                    }
+                }
+            }
+            
+            // Look for CH pattern in hex (CH = 4348)
+            java.util.regex.Pattern chHexPattern = java.util.regex.Pattern.compile("4348([0-9A-F]+)");
+            java.util.regex.Matcher chMatcher = chHexPattern.matcher(hexData.toUpperCase());
+            
+            if (chMatcher.find()) {
+                String chHexMatch = chMatcher.group();
+                Log.d(TAG, "extractTransactionFromHex: Found CH hex pattern: " + chHexMatch);
+                
+                // Convert the hex to ASCII
+                String asciiResult = hexToAscii(chHexMatch);
+                if (asciiResult != null && asciiResult.startsWith("CH")) {
+                    // Extract reasonable length CH ID
+                    if (asciiResult.length() <= 15) {
+                        Log.d(TAG, "extractTransactionFromHex: Extracted CH ID from hex: " + asciiResult);
+                        return asciiResult;
+                    } else {
+                        // Truncate to reasonable length
+                        String truncated = asciiResult.substring(0, Math.min(15, asciiResult.length()));
+                        Log.d(TAG, "extractTransactionFromHex: Truncated CH ID: " + truncated);
+                        return truncated;
+                    }
+                }
+            }
+            
+            // Try to convert entire hex to ASCII and look for patterns
+            String asciiFromHex = hexToAscii(hexData);
+            if (asciiFromHex != null) {
+                Log.d(TAG, "extractTransactionFromHex: Full ASCII from hex: " + asciiFromHex);
+                
+                // Look for CHE pattern in ASCII
+                String cheId = extractCHEFromText(asciiFromHex);
+                if (cheId != null) {
+                    return cheId;
+                }
+                
+                // Look for FT pattern in ASCII
+                String ftId = extractFTFromText(asciiFromHex);
+                if (ftId != null) {
+                    return ftId;
+                }
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "extractTransactionFromHex: Error extracting from hex: " + e.getMessage());
+        }
+        
+        return null;
+    }
+
+    private String hexToAscii(String hexStr) {
+        try {
+            Log.d(TAG, "hexToAscii: Converting hex: " + hexStr);
+            StringBuilder output = new StringBuilder();
+            for (int i = 0; i < hexStr.length(); i += 2) {
+                if (i + 1 < hexStr.length()) {
+                    String str = hexStr.substring(i, i + 2);
+                    int decimal = Integer.parseInt(str, 16);
+                    if (decimal >= 32 && decimal <= 126) { // Printable ASCII range
+                        output.append((char) decimal);
+                    }
+                }
+            }
+            String result = output.toString();
+            Log.d(TAG, "hexToAscii: Result: " + result);
+            return result;
+        } catch (Exception e) {
+            Log.e(TAG, "hexToAscii: Error converting hex to ASCII: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String extractCHEFromText(String text) {
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
+        
+        String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
+        Log.d(TAG, "extractCHEFromText: Searching for CHE ID in text: " + cleanText);
+        
+        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{5,10}");
+        java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
+        if (cheMatcher.find()) {
+            String cheId = cheMatcher.group();
+            Log.d(TAG, "extractCHEFromText: Found CHE ID: " + cheId);
+            return cheId;
+        }
+        
+        return null;
+    }
+
+    private String extractCHFromText(String text) {
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
+        
+        String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
+        Log.d(TAG, "extractCHFromText: Searching for CH ID in text: " + cleanText);
+        
+        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8,12}");
+        java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
+        if (chMatcher.find()) {
+            String chId = chMatcher.group();
+            Log.d(TAG, "extractCHFromText: Found CH ID: " + chId);
+            return chId;
+        }
+        
+        return null;
+    }
+
+    private String extractFTFromText(String text) {
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
+        
+        String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
+        Log.d(TAG, "extractFTFromText: Searching for FT ID in text: " + cleanText);
+        
+        java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
+        java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
+        if (ftMatcher.find()) {
+            String ftId = ftMatcher.group();
+            Log.d(TAG, "extractFTFromText: Found FT ID: " + ftId);
+            return ftId;
+        }
+        
+        return null;
+    }
+
+    private String extractFTFromSMS(String smsText) {
+        if (smsText == null || smsText.isEmpty()) {
+            Log.d(TAG, "extractFTFromSMS: Input text is null or empty");
+            return null;
+        }
+        
+        // Clean the text and convert to uppercase for better matching
+        String cleanText = smsText.toUpperCase().replaceAll("\\s+", " ");
+        Log.d(TAG, "extractFTFromSMS: Searching for FT ID in text: " + cleanText);
+        
+        java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
+        java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
+        if (ftMatcher.find()) {
+            String ftId = ftMatcher.group();
+            Log.d(TAG, "extractFTFromSMS: Found FT ID: " + ftId);
+            return ftId;
+        }
+        
+        Log.d(TAG, "extractFTFromSMS: No FT ID found in SMS text");
+        return null;
     }
 
     private void setupClickListeners() {
@@ -264,10 +566,15 @@ public class MainActivity extends AppCompatActivity {
             String qrContent = decodeQRCode(bitmap);
             Log.d(TAG, "QR content decoded: " + qrContent);
             if (qrContent != null) {
-                String processedId = OCRHelper.processScannedText(qrContent.trim());
-                Log.d(TAG, "Processed QR content: " + processedId);
-                transactionIdEditText.setText(processedId);
-                verifyTransaction(processedId);
+                String extractedId = extractTransactionId(qrContent.trim());
+                Log.d(TAG, "Extracted transaction ID: " + extractedId);
+                if (extractedId != null) {
+                    transactionIdEditText.setText(extractedId);
+                    verifyTransaction(extractedId);
+                } else {
+                    Log.w(TAG, "No transaction ID found in QR image");
+                    Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_SHORT).show();
+                }
             } else {
                 Log.w(TAG, "No QR code found in image");
                 Toast.makeText(this, getString(R.string.no_qr_found), Toast.LENGTH_SHORT).show();

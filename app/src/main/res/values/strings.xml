@@ -70,6 +70,7 @@
     <string name="scan_sms_screenshot">Point camera at SMS text message on screen to extract FT ID</string>
     <string name="no_ft_found_in_sms">No FT ID found in SMS text</string>
     <string name="scanning_options">Scanning Options</string>
+    <string name="no_transaction_id_found">No transaction ID found in the scanned data</string>
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR Verification Failed</string>
