@@ -14,7 +14,7 @@ public class OCRHelper {
     private static final Pattern CH_PATTERN = Pattern.compile("CH[A-Z0-9]{8,12}");
     
     /**
-     * Extract FT transaction ID from SMS text using OCR
+     * Extract FT transaction ID from SMS text
      */
     public static String extractFTFromSMS(String smsText) {
         if (smsText == null || smsText.isEmpty()) {
@@ -23,6 +23,7 @@ public class OCRHelper {
         
         // Clean the text and convert to uppercase for better matching
         String cleanText = smsText.toUpperCase().replaceAll("\\s+", " ");
+        Log.d(TAG, "Searching for FT ID in text: " + cleanText);
         
         Matcher ftMatcher = FT_PATTERN.matcher(cleanText);
         if (ftMatcher.find()) {
@@ -31,6 +32,7 @@ public class OCRHelper {
             return ftId;
         }
         
+        Log.d(TAG, "No FT ID found in SMS text");
         return null;
     }
     
@@ -55,6 +57,71 @@ public class OCRHelper {
     }
     
     /**
+     * Convert hex string to ASCII
+     */
+    private static String hexToAscii(String hexStr) {
+        try {
+            StringBuilder output = new StringBuilder();
+            for (int i = 0; i < hexStr.length(); i += 2) {
+                String str = hexStr.substring(i, i + 2);
+                int decimal = Integer.parseInt(str, 16);
+                if (decimal >= 32 && decimal <= 126) { // Printable ASCII range
+                    output.append((char) decimal);
+                }
+            }
+            return output.toString();
+        } catch (Exception e) {
+            Log.e(TAG, "Error converting hex to ASCII: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Extract CH ID from hex-encoded data
+     */
+    private static String extractCHFromHex(String hexData) {
+        try {
+            // Look for the hex pattern that represents "CH" followed by alphanumeric characters
+            // "CH" in ASCII hex is "4348"
+            Pattern hexChPattern = Pattern.compile("4348[0-9A-F]+");
+            Matcher matcher = hexChPattern.matcher(hexData.toUpperCase());
+            
+            if (matcher.find()) {
+                String hexMatch = matcher.group();
+                Log.d(TAG, "Found hex CH pattern: " + hexMatch);
+                
+                // Convert the hex to ASCII
+                String asciiResult = hexToAscii(hexMatch);
+                if (asciiResult != null && asciiResult.startsWith("CH")) {
+                    // Extract just the CH ID part (CH + alphanumeric)
+                    Pattern chIdPattern = Pattern.compile("CH[A-Z0-9]+");
+                    Matcher chMatcher = chIdPattern.matcher(asciiResult);
+                    if (chMatcher.find()) {
+                        String chId = chMatcher.group();
+                        // Limit to reasonable length
+                        if (chId.length() <= 15) {
+                            Log.d(TAG, "Extracted CH ID from hex: " + chId);
+                            return chId;
+                        }
+                    }
+                }
+            }
+            
+            // Alternative approach: look for ASCII representation directly in hex
+            String asciiFromHex = hexToAscii(hexData);
+            if (asciiFromHex != null) {
+                Log.d(TAG, "ASCII from hex: " + asciiFromHex);
+                return extractCHFromText(asciiFromHex);
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error extracting CH from hex: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
      * Decode Base64 QR code data and extract transaction ID
      */
     public static String decodeBase64QR(String base64Data) {
@@ -65,23 +132,40 @@ public class OCRHelper {
             
             // Remove any whitespace
             base64Data = base64Data.replaceAll("\\s+", "");
+            Log.d(TAG, "Decoding Base64: " + base64Data);
             
             // Decode Base64
             byte[] decodedBytes = Base64.decode(base64Data, Base64.DEFAULT);
-            String decodedString = new String(decodedBytes);
             
-            Log.d(TAG, "Decoded Base64: " + decodedString);
+            // Convert to hex string for analysis
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : decodedBytes) {
+                hexString.append(String.format("%02X", b & 0xFF));
+            }
+            String hexData = hexString.toString();
+            Log.d(TAG, "Decoded to hex: " + hexData);
             
-            // Try to extract CH ID from decoded string
-            String chId = extractCHFromText(decodedString);
+            // Try to extract CH ID from hex data
+            String chId = extractCHFromHex(hexData);
             if (chId != null) {
+                Log.d(TAG, "Successfully extracted CH ID: " + chId);
                 return chId;
             }
             
-            // If no CH ID found, try FT ID
-            String ftId = extractFTFromSMS(decodedString);
-            if (ftId != null) {
-                return ftId;
+            // Also try direct string conversion
+            String decodedString = new String(decodedBytes);
+            Log.d(TAG, "Decoded to string: " + decodedString);
+            
+            // Try to extract CH ID from decoded string
+            String chFromString = extractCHFromText(decodedString);
+            if (chFromString != null) {
+                return chFromString;
+            }
+            
+            // Try to extract FT ID from decoded string
+            String ftFromString = extractFTFromSMS(decodedString);
+            if (ftFromString != null) {
+                return ftFromString;
             }
             
             return decodedString; // Return raw decoded string if no pattern matches
@@ -120,8 +204,11 @@ public class OCRHelper {
             return null;
         }
         
+        Log.d(TAG, "Processing scanned text: " + scannedText);
+        
         // First check if it's Base64 encoded
         if (isBase64(scannedText)) {
+            Log.d(TAG, "Detected Base64 encoded data");
             String decoded = decodeBase64QR(scannedText);
             if (decoded != null) {
                 return decoded;

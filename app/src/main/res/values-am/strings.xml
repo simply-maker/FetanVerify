@@ -68,6 +68,9 @@
     <string name="error_processing_image">ምስሉን በማስኬድ ላይ ስህተት</string>
     <string name="scan_qr_code">QR ኮድ ስካን</string>
     <string name="scan_sms_text">SMS ጽሁፍ ስካን</string>
+    <string name="scan_sms_screenshot">ካሜራውን በስክሪኑ ላይ ባለው SMS ጽሁፍ ላይ ያነጣጥሩ</string>
+    <string name="no_ft_found_in_sms">በSMS ጽሁፍ ውስጥ ምንም FT መለያ አልተገኘም</string>
+    <string name="scanning_options">የስካን አማራጮች</string>
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR ማረጋገጫ አልተሳካም</string>

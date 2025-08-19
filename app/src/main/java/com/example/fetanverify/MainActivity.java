@@ -142,16 +142,21 @@ public class MainActivity extends AppCompatActivity {
         smsLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        String smsText = result.getData().getStringExtra("SCAN_RESULT");
-                        if (smsText != null) {
-                            String ftId = OCRHelper.extractFTFromSMS(smsText);
+                        String scannedText = result.getData().getStringExtra("SCAN_RESULT");
+                        if (scannedText != null) {
+                            // For SMS scanning, we're looking for FT ID in the text content
+                            String ftId = OCRHelper.extractFTFromSMS(scannedText);
                             if (ftId != null) {
                                 transactionIdEditText.setText(ftId);
                                 verifyTransaction(ftId);
                             } else {
-                                Toast.makeText(this, getString(R.string.no_qr_found), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this, getString(R.string.no_ft_found_in_sms), Toast.LENGTH_SHORT).show();
                             }
+                        } else {
+                            Toast.makeText(this, getString(R.string.no_scan_data), Toast.LENGTH_SHORT).show();
                         }
+                    } else {
+                        Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -183,9 +188,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         scanSmsButton.setOnClickListener(v -> {
+            // For SMS scanning, we use the same QR scanner but with different instructions
+            // The user will scan a screenshot or photo of the SMS text
             Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
             intent.putExtra("SCAN_ORIENTATION_LOCKED", true);
-            intent.putExtra("PROMPT_MESSAGE", getString(R.string.scan_sms_text));
+            intent.putExtra("PROMPT_MESSAGE", getString(R.string.scan_sms_screenshot));
             intent.putExtra("BEEP_ENABLED", true);
             smsLauncher.launch(intent);
         });
@@ -356,9 +363,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onScanSMS() {
+                // For SMS scanning from dialog, use the same approach
                 Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
                 intent.putExtra("SCAN_ORIENTATION_LOCKED", true);
-                intent.putExtra("PROMPT_MESSAGE", getString(R.string.scan_sms_text));
+                intent.putExtra("PROMPT_MESSAGE", getString(R.string.scan_sms_screenshot));
                 intent.putExtra("BEEP_ENABLED", true);
                 smsLauncher.launch(intent);
             }

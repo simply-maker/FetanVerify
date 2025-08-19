@@ -68,6 +68,9 @@
     <string name="error_processing_image">Suuraa hojjechuu keessatti dogoggora</string>
     <string name="scan_qr_code">Koodii QR Scan</string>
     <string name="scan_sms_text">Barreeffama SMS Scan</string>
+    <string name="scan_sms_screenshot">Kaameraa barreeffama SMS iskiriinii irratti qabadhu</string>
+    <string name="no_ft_found_in_sms">Barreeffama SMS keessatti eenyummaan FT hin argamne</string>
+    <string name="scanning_options">Filannoo Scan</string>
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">Mirkaneessuu QR Kufate</string>
