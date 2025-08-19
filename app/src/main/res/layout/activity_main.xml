@@ -41,7 +41,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="FetanVerify"
+                        android:text="@string/app_title"
                         android:textSize="24sp"
                         android:textStyle="bold"
                         android:textColor="@color/primary_green" />
@@ -49,21 +49,41 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Verify transactions securely"
+                        android:text="@string/app_subtitle"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary" />
                 </LinearLayout>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/historyButton"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="History"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    app:strokeColor="@color/primary_green"
-                    android:textColor="@color/primary_green"
-                    app:cornerRadius="20dp"
-                    android:textSize="12sp" />
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/languageButton"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:text="🌐"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:strokeColor="@color/primary_green"
+                        android:textColor="@color/primary_green"
+                        app:cornerRadius="24dp"
+                        android:textSize="16sp"
+                        android:layout_marginEnd="8dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/historyButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/history"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:strokeColor="@color/primary_green"
+                        android:textColor="@color/primary_green"
+                        app:cornerRadius="20dp"
+                        android:textSize="12sp" />
+                </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -83,7 +103,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Transaction Verification"
+                    android:text="@string/transaction_verification"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -93,7 +113,7 @@
                     android:id="@+id/textInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Enter Transaction ID"
+                    android:hint="@string/enter_transaction_id"
                     style="@style/ModernTextInput"
                     app:boxStrokeColor="@color/primary_green"
                     app:hintTextColor="@color/primary_green"
@@ -124,18 +144,18 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:layout_marginTop="20dp"
-                    android:weightSum="2">
+                    android:weightSum="3">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/verifyButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Verify"
+                        android:text="@string/verify"
                         style="@style/ModernButton"
                         android:backgroundTint="@color/primary_green"
                         android:textColor="@color/white"
-                        android:layout_marginEnd="8dp"
+                        android:layout_marginEnd="4dp"
                         app:icon="@android:drawable/ic_menu_search"
                         app:iconTint="@color/white" />
 
@@ -144,12 +164,26 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Scan QR"
+                        android:text="@string/scan_qr"
                         style="@style/ModernButton"
                         android:backgroundTint="@color/secondary_green"
                         android:textColor="@color/white"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
                         app:icon="@android:drawable/ic_menu_camera"
+                        app:iconTint="@color/white" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/scanSmsButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/scan_sms"
+                        style="@style/ModernButton"
+                        android:backgroundTint="@color/accent_green"
+                        android:textColor="@color/white"
+                        android:layout_marginStart="4dp"
+                        app:icon="@android:drawable/ic_dialog_email"
                         app:iconTint="@color/white" />
                 </LinearLayout>
 
@@ -158,7 +192,7 @@
                     android:id="@+id/importImageButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Import QR Image"
+                    android:text="@string/import_qr_image"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     app:strokeColor="@color/primary_green"
                     android:textColor="@color/primary_green"
@@ -186,7 +220,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Verification Result"
+                    android:text="@string/verification_result"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -219,7 +253,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🔒 Privacy &amp; Security"
+                    android:text="@string/privacy_security"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary_green"
@@ -228,7 +262,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="FetanVerify uses advanced encryption to protect your transaction data. All verifications are processed securely through Firebase, ensuring your financial information remains private and protected."
+                    android:text="@string/privacy_message"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"
                     android:lineSpacingExtra="2dp" />

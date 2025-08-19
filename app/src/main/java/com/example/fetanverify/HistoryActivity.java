@@ -19,6 +19,10 @@ public class HistoryActivity extends AppCompatActivity {
     @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Apply language before setting content view
+        LanguageHelper.applyLanguage(this);
+        
         setContentView(R.layout.activity_history);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);

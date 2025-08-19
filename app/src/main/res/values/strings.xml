@@ -1,3 +1,85 @@
 <resources>
     <string name="app_name">FetanVerify</string>
+    
+    <!-- Main Activity -->
+    <string name="app_title">FetanVerify</string>
+    <string name="app_subtitle">Verify transactions securely</string>
+    <string name="transaction_verification">Transaction Verification</string>
+    <string name="enter_transaction_id">Enter Transaction ID</string>
+    <string name="verify">Verify</string>
+    <string name="scan_qr">Scan QR</string>
+    <string name="import_qr_image">Import QR Image</string>
+    <string name="scan_sms">Scan SMS</string>
+    <string name="enter_ft_id">Enter FT ID</string>
+    <string name="history">History</string>
+    <string name="verifying">Verifying...</string>
+    <string name="verification_result">Verification Result</string>
+    <string name="privacy_security">🔒 Privacy &amp; Security</string>
+    <string name="privacy_message">FetanVerify uses advanced encryption to protect your transaction data. All verifications are processed securely through Firebase, ensuring your financial information remains private and protected.</string>
+    
+    <!-- Login Activity -->
+    <string name="secure_transaction_verification">Secure Transaction Verification</string>
+    <string name="email_address">Email Address</string>
+    <string name="password">Password</string>
+    <string name="remember_me">Remember me</string>
+    <string name="sign_in">Sign In</string>
+    <string name="logging_in">Logging in...</string>
+    <string name="privacy_notice">🔒 Your data is encrypted and secure. We prioritize your privacy and never share your information with third parties.</string>
+    
+    <!-- History Activity -->
+    <string name="transaction_history">Transaction History</string>
+    <string name="verification_history">Verification History</string>
+    <string name="verification_records">Your transaction verification records</string>
+    <string name="no_history_available">No History Available</string>
+    <string name="start_verifying">Start verifying transactions to see your history here</string>
+    
+    <!-- Verification Results -->
+    <string name="verified">✓ Verified</string>
+    <string name="failed">✗ Failed</string>
+    <string name="verification_successful">✓ Verification Successful</string>
+    <string name="verification_failed">✗ Verification Failed</string>
+    <string name="transaction_verified">Transaction has been verified successfully!</string>
+    <string name="transaction_not_verified">Transaction could not be verified. Please check the ID and try again.</string>
+    <string name="invalid_transaction_id">Invalid Transaction ID: %s</string>
+    <string name="database_error">Database Error</string>
+    
+    <!-- Transaction Details -->
+    <string name="transaction_id">Transaction ID: %s</string>
+    <string name="sender">Sender: %s</string>
+    <string name="amount">Amount: %s</string>
+    <string name="timestamp">Timestamp: %s</string>
+    <string name="status">Status: %s</string>
+    <string name="time">Time: %s</string>
+    <string name="id">ID: %s</string>
+    
+    <!-- Dialogs and Messages -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="enter_email">Enter email</string>
+    <string name="enter_password">Enter password</string>
+    <string name="login_failed">Login Failed: %s</string>
+    <string name="registration_failed">Registration Failed: %s</string>
+    <string name="no_scan_data">No scan data received</string>
+    <string name="scan_cancelled">Scan cancelled</string>
+    <string name="no_qr_found">No QR code found in the image</string>
+    <string name="error_processing_image">Error processing image</string>
+    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="scan_sms_text">Scan SMS Text</string>
+    
+    <!-- FT ID Dialog -->
+    <string name="qr_verification_failed">QR Verification Failed</string>
+    <string name="qr_failed_message">The QR code verification failed. Please ask the customer for their FT ID from their Telebirr SMS or scan their SMS text.</string>
+    <string name="enter_ft_manually">Enter FT ID Manually</string>
+    <string name="scan_sms_for_ft">Scan SMS for FT ID</string>
+    <string name="ft_id_hint">Enter FT ID (e.g., FT1234567890)</string>
+    <string name="invalid_ft_format">Invalid FT ID format. Please enter a valid FT ID.</string>
+    
+    <!-- Language Selection -->
+    <string name="select_language">Select Language</string>
+    <string name="english">English</string>
+    <string name="amharic">አማርኛ</string>
+    <string name="oromo">Afaan Oromoo</string>
+    <string name="language">Language</string>
 </resources>

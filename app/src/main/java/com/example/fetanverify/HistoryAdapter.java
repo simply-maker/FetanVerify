@@ -25,13 +25,15 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
     @Override
     public void onBindViewHolder(@NonNull HistoryViewHolder holder, int position) {
         HistoryItem item = historyList.get(position);
-        holder.transactionIdTextView.setText("ID: " + item.getTransactionId());
-        holder.statusTextView.setText("Status: " + item.getStatus());
-        holder.amountTextView.setText("Amount: " + item.getAmount());
-        holder.timestampTextView.setText("Time: " + item.getTimestamp());
+        
+        Context context = holder.itemView.getContext();
+        holder.transactionIdTextView.setText(context.getString(R.string.id, item.getTransactionId()));
+        holder.statusTextView.setText(context.getString(R.string.status, item.getStatus()));
+        holder.amountTextView.setText(context.getString(R.string.amount, item.getAmount()));
+        holder.timestampTextView.setText(context.getString(R.string.time, item.getTimestamp()));
         
         // Set colors based on status
-        if ("Verified".equals(item.getStatus())) {
+        if (context.getString(R.string.verified).equals(item.getStatus()) || "Verified".equals(item.getStatus())) {
             holder.statusTextView.setTextColor(0xFF1DB584); // Green
         } else {
             holder.statusTextView.setTextColor(0xFFE53E3E); // Red

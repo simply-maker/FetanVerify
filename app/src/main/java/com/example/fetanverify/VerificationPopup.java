@@ -31,18 +31,19 @@ public class VerificationPopup {
         
         statusIcon.setImageResource(R.drawable.ic_check_circle);
         statusIcon.setColorFilter(Color.parseColor("#1DB584"));
-        statusTitle.setText("✓ Verification Successful");
+        statusTitle.setText(context.getString(R.string.verification_successful));
         statusTitle.setTextColor(Color.parseColor("#1DB584"));
-        statusMessage.setText("Transaction has been verified successfully!");
+        statusMessage.setText(context.getString(R.string.transaction_verified));
         
-        String details = "Transaction ID: " + transactionId + "\n" +
-                        "Sender: " + sender + "\n" +
-                        "Amount: " + (amount != null ? amount : "N/A") + "\n" +
-                        "Timestamp: " + timestamp;
+        String details = context.getString(R.string.transaction_id, transactionId) + "\n" +
+                        context.getString(R.string.sender, sender) + "\n" +
+                        context.getString(R.string.amount, amount != null ? amount : "N/A") + "\n" +
+                        context.getString(R.string.timestamp, timestamp);
         transactionDetails.setText(details);
         transactionDetails.setVisibility(android.view.View.VISIBLE);
         
         okButton.setBackgroundColor(Color.parseColor("#1DB584"));
+        okButton.setText(context.getString(R.string.ok));
         okButton.setOnClickListener(v -> dialog.dismiss());
         
         dialog.show();
@@ -67,18 +68,19 @@ public class VerificationPopup {
         
         statusIcon.setImageResource(R.drawable.ic_error_circle);
         statusIcon.setColorFilter(Color.parseColor("#E53E3E"));
-        statusTitle.setText("✗ Verification Failed");
+        statusTitle.setText(context.getString(R.string.verification_failed));
         statusTitle.setTextColor(Color.parseColor("#E53E3E"));
-        statusMessage.setText("Transaction could not be verified. Please check the ID and try again.");
+        statusMessage.setText(context.getString(R.string.transaction_not_verified));
         
-        if (!transactionId.equals("Database Error")) {
-            transactionDetails.setText("Transaction ID: " + transactionId);
+        if (!transactionId.equals(context.getString(R.string.database_error))) {
+            transactionDetails.setText(context.getString(R.string.transaction_id, transactionId));
             transactionDetails.setVisibility(android.view.View.VISIBLE);
         } else {
             transactionDetails.setVisibility(android.view.View.GONE);
         }
         
         okButton.setBackgroundColor(Color.parseColor("#E53E3E"));
+        okButton.setText(context.getString(R.string.ok));
         okButton.setOnClickListener(v -> dialog.dismiss());
         
         dialog.show();

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/popup_background"
+    android:padding="24dp"
+    android:layout_margin="16dp">
+
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/qr_verification_failed"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/error_red"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/dialogMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/qr_failed_message"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="24dp"
+        android:lineSpacingExtra="4dp" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/ftIdLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/ft_id_hint"
+        style="@style/ModernTextInput"
+        app:boxStrokeColor="@color/primary_green"
+        app:hintTextColor="@color/primary_green"
+        app:startIconDrawable="@android:drawable/ic_menu_search"
+        app:startIconTint="@color/primary_green"
+        android:layout_marginBottom="20dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ftIdEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_hint"
+            android:inputType="textCapCharacters"
+            android:maxLength="15" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/enterManuallyButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/enter_ft_manually"
+        style="@style/ModernButton"
+        android:backgroundTint="@color/primary_green"
+        android:textColor="@color/white"
+        android:layout_marginBottom="12dp"
+        app:icon="@android:drawable/ic_menu_edit"
+        app:iconTint="@color/white" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/scanSmsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/scan_sms_for_ft"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:strokeColor="@color/primary_green"
+        android:textColor="@color/primary_green"
+        android:layout_marginBottom="12dp"
+        app:cornerRadius="12dp"
+        app:icon="@android:drawable/ic_menu_camera"
+        app:iconTint="@color/primary_green" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/cancelButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/cancel"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:textColor="@color/text_secondary" />
+
+</LinearLayout>

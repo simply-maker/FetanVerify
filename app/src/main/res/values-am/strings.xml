@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ፈተን ማረጋገጫ</string>
+    
+    <!-- Main Activity -->
+    <string name="app_title">ፈተን ማረጋገጫ</string>
+    <string name="app_subtitle">ግብይቶችን በአስተማማኝ ሁኔታ ያረጋግጡ</string>
+    <string name="transaction_verification">የግብይት ማረጋገጫ</string>
+    <string name="enter_transaction_id">የግብይት መለያ ያስገቡ</string>
+    <string name="verify">አረጋግጥ</string>
+    <string name="scan_qr">QR ስካን</string>
+    <string name="import_qr_image">QR ምስል አስመጣ</string>
+    <string name="scan_sms">SMS ስካን</string>
+    <string name="enter_ft_id">FT መለያ ያስገቡ</string>
+    <string name="history">ታሪክ</string>
+    <string name="verifying">በማረጋገጥ ላይ...</string>
+    <string name="verification_result">የማረጋገጫ ውጤት</string>
+    <string name="privacy_security">🔒 ግላዊነት እና ደህንነት</string>
+    <string name="privacy_message">ፈተን ማረጋገጫ የእርስዎን የግብይት መረጃ ለመጠበቅ የላቀ ምስጠራ ይጠቀማል። ሁሉም ማረጋገጫዎች በFirebase በኩል በአስተማማኝ ሁኔታ ይሰራሉ፣ ይህም የእርስዎ የገንዘብ መረጃ ግላዊ እና የተጠበቀ መሆኑን ያረጋግጣል።</string>
+    
+    <!-- Login Activity -->
+    <string name="secure_transaction_verification">ደህንነቱ የተጠበቀ የግብይት ማረጋገጫ</string>
+    <string name="email_address">የኢሜይል አድራሻ</string>
+    <string name="password">የይለፍ ቃል</string>
+    <string name="remember_me">አስታውሰኝ</string>
+    <string name="sign_in">ግባ</string>
+    <string name="logging_in">በመግባት ላይ...</string>
+    <string name="privacy_notice">🔒 የእርስዎ መረጃ የተመሰጠረ እና ደህንነቱ የተጠበቀ ነው። ግላዊነትዎን እንቀድማለን እና መረጃዎን ከሦስተኛ ወገኖች ጋር አንጋራም።</string>
+    
+    <!-- History Activity -->
+    <string name="transaction_history">የግብይት ታሪክ</string>
+    <string name="verification_history">የማረጋገጫ ታሪክ</string>
+    <string name="verification_records">የእርስዎ የግብይት ማረጋገጫ መዝገቦች</string>
+    <string name="no_history_available">ምንም ታሪክ የለም</string>
+    <string name="start_verifying">ታሪክዎን እዚህ ለማየት ግብይቶችን ማረጋገጥ ይጀምሩ</string>
+    
+    <!-- Verification Results -->
+    <string name="verified">✓ ተረጋግጧል</string>
+    <string name="failed">✗ አልተሳካም</string>
+    <string name="verification_successful">✓ ማረጋገጫ ተሳክቷል</string>
+    <string name="verification_failed">✗ ማረጋገጫ አልተሳካም</string>
+    <string name="transaction_verified">ግብይቱ በተሳካ ሁኔታ ተረጋግጧል!</string>
+    <string name="transaction_not_verified">ግብይቱ ሊረጋገጥ አልቻለም። እባክዎ መለያውን ይፈትሹ እና እንደገና ይሞክሩ።</string>
+    <string name="invalid_transaction_id">ልክ ያልሆነ የግብይት መለያ: %s</string>
+    <string name="database_error">የመረጃ ቋት ስህተት</string>
+    
+    <!-- Transaction Details -->
+    <string name="transaction_id">የግብይት መለያ: %s</string>
+    <string name="sender">ላኪ: %s</string>
+    <string name="amount">መጠን: %s</string>
+    <string name="timestamp">ጊዜ ማህተም: %s</string>
+    <string name="status">ሁኔታ: %s</string>
+    <string name="time">ጊዜ: %s</string>
+    <string name="id">መለያ: %s</string>
+    
+    <!-- Dialogs and Messages -->
+    <string name="ok">እሺ</string>
+    <string name="cancel">ሰርዝ</string>
+    <string name="error">ስህተት</string>
+    <string name="success">ተሳክቷል</string>
+    <string name="enter_email">ኢሜይል ያስገቡ</string>
+    <string name="enter_password">የይለፍ ቃል ያስገቡ</string>
+    <string name="login_failed">መግባት አልተሳካም: %s</string>
+    <string name="registration_failed">ምዝገባ አልተሳካም: %s</string>
+    <string name="no_scan_data">ምንም የስካን መረጃ አልተቀበለም</string>
+    <string name="scan_cancelled">ስካን ተሰርዟል</string>
+    <string name="no_qr_found">በምስሉ ውስጥ ምንም QR ኮድ አልተገኘም</string>
+    <string name="error_processing_image">ምስሉን በማስኬድ ላይ ስህተት</string>
+    <string name="scan_qr_code">QR ኮድ ስካን</string>
+    <string name="scan_sms_text">SMS ጽሁፍ ስካን</string>
+    
+    <!-- FT ID Dialog -->
+    <string name="qr_verification_failed">QR ማረጋገጫ አልተሳካም</string>
+    <string name="qr_failed_message">የQR ኮድ ማረጋገጫ አልተሳካም። እባክዎ ደንበኛውን ከቴሌብር SMS የFT መለያቸውን እንዲሰጡዎት ይጠይቁ ወይም የSMS ጽሁፋቸውን ይስካኑ።</string>
+    <string name="enter_ft_manually">FT መለያ በእጅ ያስገቡ</string>
+    <string name="scan_sms_for_ft">ለFT መለያ SMS ስካን</string>
+    <string name="ft_id_hint">FT መለያ ያስገቡ (ለምሳሌ፣ FT1234567890)</string>
+    <string name="invalid_ft_format">ልክ ያልሆነ FT መለያ ቅርጸት። እባክዎ ትክክለኛ FT መለያ ያስገቡ።</string>
+    
+    <!-- Language Selection -->
+    <string name="select_language">ቋንቋ ይምረጡ</string>
+    <string name="english">እንግሊዝኛ</string>
+    <string name="amharic">አማርኛ</string>
+    <string name="oromo">አፋን ኦሮሞ</string>
+    <string name="language">ቋንቋ</string>
+</resources>

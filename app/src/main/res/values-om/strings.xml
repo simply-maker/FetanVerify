@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FetanVerify</string>
+    
+    <!-- Main Activity -->
+    <string name="app_title">FetanVerify</string>
+    <string name="app_subtitle">Daldalaa nagaadhaan mirkaneessi</string>
+    <string name="transaction_verification">Mirkaneessuu Daldalaa</string>
+    <string name="enter_transaction_id">Eenyummaa Daldalaa Galchi</string>
+    <string name="verify">Mirkaneessi</string>
+    <string name="scan_qr">QR Scan</string>
+    <string name="import_qr_image">Suuraa QR Galchi</string>
+    <string name="scan_sms">SMS Scan</string>
+    <string name="enter_ft_id">Eenyummaa FT Galchi</string>
+    <string name="history">Seenaa</string>
+    <string name="verifying">Mirkaneessaa jira...</string>
+    <string name="verification_result">Bu\'uura Mirkaneessuu</string>
+    <string name="privacy_security">🔒 Dhuunfaa fi Nageenya</string>
+    <string name="privacy_message">FetanVerify odeeffannoo daldalaa keessanii eeguuf encryption sadarkaa olaanaa fayyadama. Mirkaneessuun hundi karaa Firebase nagaadhaan hojjetama, kunis odeeffannoon maallaqaa keessanii dhuunfaa fi eegamaa ta\'uu isaa mirkaneessa.</string>
+    
+    <!-- Login Activity -->
+    <string name="secure_transaction_verification">Mirkaneessuu Daldalaa Nageenya Qabu</string>
+    <string name="email_address">Teessoo Email</string>
+    <string name="password">Jecha Icciitii</string>
+    <string name="remember_me">Na yaadadhu</string>
+    <string name="sign_in">Seeni</string>
+    <string name="logging_in">Seenaa jira...</string>
+    <string name="privacy_notice">🔒 Daataan keessan icciitiidhaan eegameera. Dhuunfaa keessan dursa kennina malee namoota sadaffaatti hin qoodnu.</string>
+    
+    <!-- History Activity -->
+    <string name="transaction_history">Seenaa Daldalaa</string>
+    <string name="verification_history">Seenaa Mirkaneessuu</string>
+    <string name="verification_records">Galmee mirkaneessuu daldalaa keessanii</string>
+    <string name="no_history_available">Seenaan Hin Jiru</string>
+    <string name="start_verifying">Seenaa keessan asitti arguuf daldalaa mirkaneessuu jalqabaa</string>
+    
+    <!-- Verification Results -->
+    <string name="verified">✓ Mirkanaawe</string>
+    <string name="failed">✗ Kufate</string>
+    <string name="verification_successful">✓ Mirkaneessuun Milkaawe</string>
+    <string name="verification_failed">✗ Mirkaneessuun Kufate</string>
+    <string name="transaction_verified">Daldalaan milkaadhaan mirkanaawe!</string>
+    <string name="transaction_not_verified">Daldalaan mirkaneeffamuu hin dandeenye. Maaloo eenyummaa sakattaatii deebitanii yaali.</string>
+    <string name="invalid_transaction_id">Eenyummaa Daldalaa Fashala: %s</string>
+    <string name="database_error">Dogoggora Database</string>
+    
+    <!-- Transaction Details -->
+    <string name="transaction_id">Eenyummaa Daldalaa: %s</string>
+    <string name="sender">Ergituu: %s</string>
+    <string name="amount">Hamma: %s</string>
+    <string name="timestamp">Chaappaa Yeroo: %s</string>
+    <string name="status">Haala: %s</string>
+    <string name="time">Yeroo: %s</string>
+    <string name="id">Eenyummaa: %s</string>
+    
+    <!-- Dialogs and Messages -->
+    <string name="ok">Tole</string>
+    <string name="cancel">Dhiisi</string>
+    <string name="error">Dogoggora</string>
+    <string name="success">Milkaawe</string>
+    <string name="enter_email">Email galchi</string>
+    <string name="enter_password">Jecha icciitii galchi</string>
+    <string name="login_failed">Seenuun Kufate: %s</string>
+    <string name="registration_failed">Galmaan Kufate: %s</string>
+    <string name="no_scan_data">Daataan scan hin argamne</string>
+    <string name="scan_cancelled">Scan dhiifame</string>
+    <string name="no_qr_found">Suuraa keessatti koodiin QR hin argamne</string>
+    <string name="error_processing_image">Suuraa hojjechuu keessatti dogoggora</string>
+    <string name="scan_qr_code">Koodii QR Scan</string>
+    <string name="scan_sms_text">Barreeffama SMS Scan</string>
+    
+    <!-- FT ID Dialog -->
+    <string name="qr_verification_failed">Mirkaneessuu QR Kufate</string>
+    <string name="qr_failed_message">Mirkaneessuun koodii QR kufate. Maaloo maamilaa eenyummaa FT isaanii SMS Telebirr irraa akka siif kennan gaafadhu ykn barreeffama SMS isaanii scan godhi.</string>
+    <string name="enter_ft_manually">Eenyummaa FT Harkaan Galchi</string>
+    <string name="scan_sms_for_ft">Eenyummaa FT\'f SMS Scan</string>
+    <string name="ft_id_hint">Eenyummaa FT galchi (fkf., FT1234567890)</string>
+    <string name="invalid_ft_format">Bifa eenyummaa FT fashala. Maaloo eenyummaa FT sirrii galchi.</string>
+    
+    <!-- Language Selection -->
+    <string name="select_language">Afaan Filadhu</string>
+    <string name="english">Afaan Ingilizii</string>
+    <string name="amharic">Afaan Amaaraa</string>
+    <string name="oromo">Afaan Oromoo</string>
+    <string name="language">Afaan</string>
+</resources>
