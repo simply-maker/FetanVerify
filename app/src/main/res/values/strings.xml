@@ -90,4 +90,9 @@
     <!-- Logout -->
     <string name="logout">Logout</string>
     <string name="logout_confirmation">Are you sure you want to logout?</string>
+    
+    <!-- Camera Scan Activity -->
+    <string name="scan_sms_instruction">Point camera at SMS text message</string>
+    <string name="scan_sms_tip">Make sure the text is clear and well-lit</string>
+    <string name="capture">Capture</string>
 </resources>

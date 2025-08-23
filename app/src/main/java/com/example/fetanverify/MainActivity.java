@@ -49,6 +49,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import android.util.Log;
+import java.util.concurrent.CompletableFuture;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -77,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Apply language before setting content view
         LanguageHelper.applyLanguage(this);
+        
+        // Initialize SMS text extractor
+        SMSTextExtractor.initialize();
 
         setContentView(R.layout.activity_main);
 
@@ -123,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Raw QR scan result: " + transactionId);
                         if (transactionId != null) {
                             try {
-                                String extractedId = extractTransactionId(transactionId.trim());
+                                String extractedId = TransactionExtractor.extractTransactionId(transactionId.trim());
                                 Log.d(TAG, "Extracted transaction ID: " + extractedId);
                                 if (extractedId != null) {
                                     transactionIdEditText.setText(extractedId);
@@ -172,8 +176,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Raw SMS scan result: " + scannedText);
                         if (scannedText != null) {
                             try {
-                                // Use the new priority-based SMS processing
-                                String extractedId = OCRHelper.processSMSText(scannedText);
+                                String extractedId = TransactionExtractor.extractTransactionId(scannedText);
                                 Log.d(TAG, "Extracted FT ID from SMS: " + extractedId);
                                 if (extractedId != null) {
                                     transactionIdEditText.setText(extractedId);
@@ -195,42 +198,6 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
                     }
                 });
-    }
-
-    private String extractTransactionId(String rawData) {
-        if (rawData == null || rawData.isEmpty()) {
-            Log.d(TAG, "extractTransactionId: Input is null or empty");
-            return null;
-        }
-
-        Log.d(TAG, "extractTransactionId: Processing raw data: " + rawData.substring(0, Math.min(50, rawData.length())) + "...");
-
-        if (OCRHelper.isBase64(rawData)) {
-            Log.d(TAG, "extractTransactionId: Detected Base64 encoded data");
-            String decoded = OCRHelper.decodeBase64QR(rawData);
-            if (decoded != null) {
-                Log.d(TAG, "extractTransactionId: Successfully decoded Base64 to: " + decoded);
-                return decoded;
-            } else {
-                Log.d(TAG, "extractTransactionId: Base64 decoding failed");
-                return null;
-            }
-        }
-
-        String ftId = OCRHelper.extractFTFromSMS(rawData);
-        if (ftId != null) {
-            Log.d(TAG, "extractTransactionId: Found FT ID: " + ftId);
-            return ftId;
-        }
-
-        String chId = OCRHelper.extractCHFromText(rawData);
-        if (chId != null) {
-            Log.d(TAG, "extractTransactionId: Found CH ID: " + chId);
-            return chId;
-        }
-
-        Log.d(TAG, "extractTransactionId: No patterns matched, returning null");
-        return null;
     }
 
     private void setupClickListeners() {
@@ -315,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
             String qrContent = decodeQRCode(bitmap);
             Log.d(TAG, "QR content decoded: " + qrContent);
             if (qrContent != null) {
-                String extractedId = extractTransactionId(qrContent.trim());
+                String extractedId = TransactionExtractor.extractTransactionId(qrContent.trim());
                 Log.d(TAG, "Extracted transaction ID: " + extractedId);
                 if (extractedId != null) {
                     transactionIdEditText.setText(extractedId);
@@ -523,7 +490,7 @@ public class MainActivity extends AppCompatActivity {
         resultTextView.setText(resultText);
 
         // Show FT dialog for any CH format transaction that fails verification
-        if (OCRHelper.isCHFormat(transactionId)) {
+        if (TransactionExtractor.isCHFormat(transactionId)) {
             showFTIdDialog();
         } else {
             VerificationPopup.showErrorPopup(MainActivity.this, transactionId != null ? transactionId : "N/A");
