@@ -8,11 +8,50 @@ import java.util.regex.Pattern;
 public class OCRHelper {
     private static final String TAG = "OCRHelper";
 
-    // Regex patterns for different transaction ID formats
+    // Updated regex patterns for different transaction ID formats
     private static final Pattern FT_PATTERN = Pattern.compile("FT[A-Za-z0-9]{10,12}", Pattern.CASE_INSENSITIVE);
+    // Updated CH pattern to match CH + 8 variable characters
+    private static final Pattern CH_PATTERN = Pattern.compile("CH[A-Za-z0-9]{8}", Pattern.CASE_INSENSITIVE);
+    // Keep legacy patterns for backward compatibility
     private static final Pattern CHA_PATTERN = Pattern.compile("CHA[A-Za-z0-9]{5}", Pattern.CASE_INSENSITIVE);
     private static final Pattern CHE_PATTERN = Pattern.compile("CHE[A-Za-z0-9]{7}", Pattern.CASE_INSENSITIVE);
-    private static final Pattern CH_PATTERN = Pattern.compile("CH[A-Za-z0-9]{8}", Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Extract transaction IDs from SMS text with priority logic:
+     * 1. If both CH and FT IDs are found → take only FT
+     * 2. If only CH ID is found → take CH
+     * 3. If only FT ID is found → take FT
+     */
+    public static String extractFromSMSWithPriority(String smsText) {
+        if (smsText == null || smsText.isEmpty()) {
+            Log.d(TAG, "extractFromSMSWithPriority: Input text is null or empty");
+            return null;
+        }
+
+        String cleanText = smsText.replaceAll("\\s+", " ").toUpperCase();
+        Log.d(TAG, "extractFromSMSWithPriority: Processing SMS text: " + cleanText);
+
+        // Look for both FT and CH IDs
+        String ftId = extractFTFromSMS(cleanText);
+        String chId = extractCHFromText(cleanText);
+
+        Log.d(TAG, "extractFromSMSWithPriority: Found FT ID: " + ftId + ", CH ID: " + chId);
+
+        // Apply priority logic
+        if (ftId != null && chId != null) {
+            Log.d(TAG, "extractFromSMSWithPriority: Both found, returning FT ID: " + ftId);
+            return ftId;
+        } else if (ftId != null) {
+            Log.d(TAG, "extractFromSMSWithPriority: Only FT found, returning: " + ftId);
+            return ftId;
+        } else if (chId != null) {
+            Log.d(TAG, "extractFromSMSWithPriority: Only CH found, returning: " + chId);
+            return chId;
+        }
+
+        Log.d(TAG, "extractFromSMSWithPriority: No transaction IDs found");
+        return null;
+    }
 
     /**
      * Extract FT transaction ID from SMS text
@@ -38,7 +77,7 @@ public class OCRHelper {
     }
 
     /**
-     * Extract CH transaction ID from text
+     * Extract CH transaction ID from text (updated to handle variable suffixes)
      */
     public static String extractCHFromText(String text) {
         if (text == null || text.isEmpty()) {
@@ -49,25 +88,27 @@ public class OCRHelper {
         String cleanText = text.toUpperCase();
         Log.d(TAG, "extractCHFromText: Searching for CH ID in text: " + cleanText);
 
+        // Primary pattern: CH + 8 variable characters
+        Matcher chMatcher = CH_PATTERN.matcher(cleanText);
+        if (chMatcher.find()) {
+            String chId = chMatcher.group();
+            Log.d(TAG, "extractCHFromText: Found CH ID: " + chId);
+            return chId;
+        }
+
+        // Legacy patterns for backward compatibility
         Matcher chaMatcher = CHA_PATTERN.matcher(cleanText);
         if (chaMatcher.find()) {
             String chaId = chaMatcher.group();
-            Log.d(TAG, "extractCHFromText: Found CHA ID: " + chaId);
+            Log.d(TAG, "extractCHFromText: Found legacy CHA ID: " + chaId);
             return chaId;
         }
 
         Matcher cheMatcher = CHE_PATTERN.matcher(cleanText);
         if (cheMatcher.find()) {
             String cheId = cheMatcher.group();
-            Log.d(TAG, "extractCHFromText: Found CHE ID: " + cheId);
+            Log.d(TAG, "extractCHFromText: Found legacy CHE ID: " + cheId);
             return cheId;
-        }
-
-        Matcher chMatcher = CH_PATTERN.matcher(cleanText);
-        if (chMatcher.find()) {
-            String chId = chMatcher.group();
-            Log.d(TAG, "extractCHFromText: Found CH ID: " + chId);
-            return chId;
         }
 
         Log.d(TAG, "extractCHFromText: No CH ID found in text");
@@ -98,44 +139,14 @@ public class OCRHelper {
     }
 
     /**
-     * Extract transaction ID from hex-encoded data
+     * Extract transaction ID from hex-encoded data (updated for variable CH suffixes)
      */
     private static String extractTransactionFromHex(String hexData) {
         try {
             hexData = hexData.toUpperCase();
             Log.d(TAG, "extractTransactionFromHex: Processing hex data: " + hexData);
 
-            // Try CHA prefix (434841), next 10 hex chars (5 ASCII chars)
-            int chaIndex = hexData.indexOf("434841"); // CHA
-            if (chaIndex != -1) {
-                int start = chaIndex;
-                int length = 16; // 6 (CHA) + 10 (5 chars)
-                if (start + length <= hexData.length()) {
-                    String idHex = hexData.substring(start, start + length);
-                    String idAscii = hexToAscii(idHex);
-                    if (idAscii != null && CHA_PATTERN.matcher(idAscii).matches()) {
-                        Log.d(TAG, "extractTransactionFromHex: Found CHA ID: " + idAscii);
-                        return idAscii;
-                    }
-                }
-            }
-
-            // Try CHE prefix (434845), next 14 hex chars (7 ASCII chars)
-            int cheIndex = hexData.indexOf("434845"); // CHE
-            if (cheIndex != -1) {
-                int start = cheIndex;
-                int length = 20; // 6 (CHE) + 14 (7 chars)
-                if (start + length <= hexData.length()) {
-                    String idHex = hexData.substring(start, start + length);
-                    String idAscii = hexToAscii(idHex);
-                    if (idAscii != null && CHE_PATTERN.matcher(idAscii).matches()) {
-                        Log.d(TAG, "extractTransactionFromHex: Found CHE ID: " + idAscii);
-                        return idAscii;
-                    }
-                }
-            }
-
-            // Try CH prefix (4348), next 16 hex chars (8 ASCII chars)
+            // Try CH prefix (4348), next 16 hex chars (8 ASCII chars) - UPDATED
             int chIndex = hexData.indexOf("4348"); // CH
             if (chIndex != -1) {
                 int start = chIndex;
@@ -145,6 +156,36 @@ public class OCRHelper {
                     String idAscii = hexToAscii(idHex);
                     if (idAscii != null && CH_PATTERN.matcher(idAscii).matches()) {
                         Log.d(TAG, "extractTransactionFromHex: Found CH ID: " + idAscii);
+                        return idAscii;
+                    }
+                }
+            }
+
+            // Try legacy CHA prefix (434841), next 10 hex chars (5 ASCII chars)
+            int chaIndex = hexData.indexOf("434841"); // CHA
+            if (chaIndex != -1) {
+                int start = chaIndex;
+                int length = 16; // 6 (CHA) + 10 (5 chars)
+                if (start + length <= hexData.length()) {
+                    String idHex = hexData.substring(start, start + length);
+                    String idAscii = hexToAscii(idHex);
+                    if (idAscii != null && CHA_PATTERN.matcher(idAscii).matches()) {
+                        Log.d(TAG, "extractTransactionFromHex: Found legacy CHA ID: " + idAscii);
+                        return idAscii;
+                    }
+                }
+            }
+
+            // Try legacy CHE prefix (434845), next 14 hex chars (7 ASCII chars)
+            int cheIndex = hexData.indexOf("434845"); // CHE
+            if (cheIndex != -1) {
+                int start = cheIndex;
+                int length = 20; // 6 (CHE) + 14 (7 chars)
+                if (start + length <= hexData.length()) {
+                    String idHex = hexData.substring(start, start + length);
+                    String idAscii = hexToAscii(idHex);
+                    if (idAscii != null && CHE_PATTERN.matcher(idAscii).matches()) {
+                        Log.d(TAG, "extractTransactionFromHex: Found legacy CHE ID: " + idAscii);
                         return idAscii;
                     }
                 }
@@ -297,7 +338,7 @@ public class OCRHelper {
     }
 
     /**
-     * Process SMS text specifically for FT ID extraction
+     * Process SMS text with priority logic for FT and CH IDs
      */
     public static String processSMSText(String smsText) {
         if (smsText == null || smsText.isEmpty()) {
@@ -306,13 +347,24 @@ public class OCRHelper {
         }
 
         Log.d(TAG, "processSMSText: Processing SMS text: " + smsText);
-        String ftId = extractFTFromSMS(smsText);
-        if (ftId != null) {
-            Log.d(TAG, "processSMSText: Successfully extracted FT ID: " + ftId);
-            return ftId;
-        }
+        return extractFromSMSWithPriority(smsText);
+    }
 
-        Log.d(TAG, "processSMSText: No FT ID found in SMS text");
-        return null;
+    /**
+     * Check if a transaction ID is a CH format (including legacy formats)
+     */
+    public static boolean isCHFormat(String transactionId) {
+        if (transactionId == null) return false;
+        return CH_PATTERN.matcher(transactionId).matches() || 
+               CHA_PATTERN.matcher(transactionId).matches() || 
+               CHE_PATTERN.matcher(transactionId).matches();
+    }
+
+    /**
+     * Check if a transaction ID is an FT format
+     */
+    public static boolean isFTFormat(String transactionId) {
+        if (transactionId == null) return false;
+        return FT_PATTERN.matcher(transactionId).matches();
     }
 }

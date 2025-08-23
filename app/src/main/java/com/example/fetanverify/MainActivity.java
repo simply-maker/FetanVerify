@@ -130,15 +130,16 @@ public class MainActivity extends AppCompatActivity {
                                     verifyTransaction(extractedId);
                                 } else {
                                     Log.w(TAG, "No transaction ID found in QR scan result");
-                                    Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_SHORT).show();
+                                    // Show FT dialog when QR scan fails to find transaction ID
+                                    showFTIdDialog();
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "Error processing QR scan result: " + e.getMessage(), e);
-                                Toast.makeText(this, "Error processing QR code: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                showFTIdDialog();
                             }
                         } else {
                             Log.w(TAG, "QR scan result is null");
-                            Toast.makeText(this, getString(R.string.no_scan_data), Toast.LENGTH_SHORT).show();
+                            showFTIdDialog();
                         }
                     } else {
                         Log.w(TAG, "QR scan cancelled or failed");
@@ -171,14 +172,15 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Raw SMS scan result: " + scannedText);
                         if (scannedText != null) {
                             try {
-                                String extractedId = OCRHelper.extractFTFromSMS(scannedText);
+                                // Use the new priority-based SMS processing
+                                String extractedId = OCRHelper.processSMSText(scannedText);
                                 Log.d(TAG, "Extracted FT ID from SMS: " + extractedId);
                                 if (extractedId != null) {
                                     transactionIdEditText.setText(extractedId);
                                     verifyTransaction(extractedId);
                                 } else {
-                                    Log.w(TAG, "No FT ID found in SMS text: " + scannedText);
-                                    Toast.makeText(this, getString(R.string.no_ft_found_in_sms), Toast.LENGTH_LONG).show();
+                                    Log.w(TAG, "No transaction ID found in SMS text: " + scannedText);
+                                    Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_LONG).show();
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "Error processing SMS scan result: " + e.getMessage(), e);
@@ -320,16 +322,15 @@ public class MainActivity extends AppCompatActivity {
                     verifyTransaction(extractedId);
                 } else {
                     Log.w(TAG, "No transaction ID found in QR image");
-                    Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_SHORT).show();
                     showFTIdDialog();
                 }
             } else {
                 Log.w(TAG, "No QR code found in image");
-                Toast.makeText(this, getString(R.string.no_qr_found), Toast.LENGTH_SHORT).show();
+                showFTIdDialog();
             }
         } catch (IOException e) {
             Log.e(TAG, "Error processing image: " + e.getMessage(), e);
-            Toast.makeText(this, getString(R.string.error_processing_image), Toast.LENGTH_SHORT).show();
+            showFTIdDialog();
         }
     }
 
@@ -442,14 +443,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private boolean isEncodedCHId(String transactionId) {
-        if (transactionId == null || transactionId.length() != 10) {
-            return false;
-        }
-
-        return transactionId.matches("(?i)^(CHA.{7}|CHE.{7}|CH.{8})$");
-    }
-
     private void showFTIdDialog() {
         showLoading(false);
         FTIdDialog.showFTIdDialog(this, new FTIdDialog.FTIdCallback() {
@@ -529,7 +522,8 @@ public class MainActivity extends AppCompatActivity {
         String resultText = getString(R.string.failed) + "\n" + getString(R.string.invalid_transaction_id, transactionId != null ? transactionId : "N/A");
         resultTextView.setText(resultText);
 
-        if (isEncodedCHId(transactionId)) {
+        // Show FT dialog for any CH format transaction that fails verification
+        if (OCRHelper.isCHFormat(transactionId)) {
             showFTIdDialog();
         } else {
             VerificationPopup.showErrorPopup(MainActivity.this, transactionId != null ? transactionId : "N/A");
