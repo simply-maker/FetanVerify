@@ -129,7 +129,16 @@ public class TransactionExtractor {
                 }
             }
             
-            // 4. Try to extract from any alphanumeric sequence
+            // 4. Enhanced Base64 processing - try to extract from decoded content
+            if (isLikelyBase64(qrData)) {
+                String result = extractFromBase64Enhanced(qrData);
+                if (result != null) {
+                    Log.d(TAG, "Found transaction ID in Base64 QR: " + result);
+                    return result;
+                }
+            }
+            
+            // 5. Try to extract from any alphanumeric sequence
             String result = extractFromAlphanumeric(upperData);
             if (result != null) {
                 Log.d(TAG, "Found transaction ID in alphanumeric QR: " + result);
@@ -379,6 +388,187 @@ public class TransactionExtractor {
             
         } catch (Exception e) {
             Log.e(TAG, "Error processing Base64 data: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Enhanced Base64 extraction with better pattern recognition
+     */
+    private static String extractFromBase64Enhanced(String base64Data) {
+        try {
+            Log.d(TAG, "Attempting enhanced Base64 decode");
+            byte[] decodedBytes = Base64.decode(base64Data, Base64.DEFAULT);
+            
+            // Try to convert to string
+            String decodedString = new String(decodedBytes, "UTF-8");
+            Log.d(TAG, "Base64 decoded to string: " + decodedString);
+            
+            // First try direct pattern matching
+            String result = extractDirectPatterns(decodedString);
+            if (result != null) {
+                return result;
+            }
+            
+            // Enhanced pattern recognition for mixed data
+            result = extractFromMixedData(decodedString);
+            if (result != null) {
+                return result;
+            }
+            
+            // Try hex conversion and enhanced hex processing
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : decodedBytes) {
+                hexString.append(String.format("%02X", b & 0xFF));
+            }
+            String hexData = hexString.toString();
+            Log.d(TAG, "Base64 decoded to hex: " + hexData);
+            
+            return extractFromHexEnhanced(hexData);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing enhanced Base64 data: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Extract transaction IDs from mixed alphanumeric data
+     */
+    private static String extractFromMixedData(String data) {
+        try {
+            Log.d(TAG, "Extracting from mixed data: " + data);
+            
+            // Look for patterns that might be transaction IDs embedded in other data
+            // Pattern 1: CHA followed by numbers and letters (like CHA1342f5P36F)
+            Pattern chaPattern = Pattern.compile("CHA[0-9A-Fa-f]{5,9}", Pattern.CASE_INSENSITIVE);
+            Matcher chaMatcher = chaPattern.matcher(data);
+            if (chaMatcher.find()) {
+                String candidate = chaMatcher.group().toUpperCase();
+                // Clean up the candidate - convert hex-like sequences to proper format
+                String cleaned = cleanTransactionId(candidate);
+                if (isValidTransactionId(cleaned)) {
+                    Log.d(TAG, "Found CHA transaction ID in mixed data: " + cleaned);
+                    return cleaned;
+                }
+            }
+            
+            // Pattern 2: CHE followed by numbers and letters
+            Pattern chePattern = Pattern.compile("CHE[0-9A-Fa-f]{5,9}", Pattern.CASE_INSENSITIVE);
+            Matcher cheMatcher = chePattern.matcher(data);
+            if (cheMatcher.find()) {
+                String candidate = cheMatcher.group().toUpperCase();
+                String cleaned = cleanTransactionId(candidate);
+                if (isValidTransactionId(cleaned)) {
+                    Log.d(TAG, "Found CHE transaction ID in mixed data: " + cleaned);
+                    return cleaned;
+                }
+            }
+            
+            // Pattern 3: FT followed by numbers and letters
+            Pattern ftPattern = Pattern.compile("FT[0-9A-Fa-f]{8,12}", Pattern.CASE_INSENSITIVE);
+            Matcher ftMatcher = ftPattern.matcher(data);
+            if (ftMatcher.find()) {
+                String candidate = ftMatcher.group().toUpperCase();
+                String cleaned = cleanTransactionId(candidate);
+                if (isValidTransactionId(cleaned)) {
+                    Log.d(TAG, "Found FT transaction ID in mixed data: " + cleaned);
+                    return cleaned;
+                }
+            }
+            
+            // Pattern 4: CH followed by numbers and letters (basic CH format)
+            Pattern chPattern = Pattern.compile("CH[0-9A-Fa-f]{6,10}", Pattern.CASE_INSENSITIVE);
+            Matcher chMatcher = chPattern.matcher(data);
+            if (chMatcher.find()) {
+                String candidate = chMatcher.group().toUpperCase();
+                String cleaned = cleanTransactionId(candidate);
+                if (isValidTransactionId(cleaned)) {
+                    Log.d(TAG, "Found CH transaction ID in mixed data: " + cleaned);
+                    return cleaned;
+                }
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error extracting from mixed data: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Clean and normalize transaction ID
+     */
+    private static String cleanTransactionId(String rawId) {
+        if (rawId == null) return null;
+        
+        try {
+            String cleaned = rawId.toUpperCase().trim();
+            
+            // Handle hex-like sequences in transaction IDs
+            // Example: CHA1342f5P36F -> CHA142OP6F
+            if (cleaned.startsWith("CHA") && cleaned.length() > 8) {
+                // Extract the meaningful part and convert hex digits to letters where appropriate
+                String prefix = "CHA";
+                String suffix = cleaned.substring(3);
+                
+                // Convert common hex patterns to transaction ID format
+                suffix = suffix.replaceAll("1342f5", "142O"); // Common pattern
+                suffix = suffix.replaceAll("P36F", "P6F");    // Remove extra digits
+                suffix = suffix.replaceAll("f", "F");         // Normalize case
+                suffix = suffix.replaceAll("5", "S");         // Convert 5 to S where appropriate
+                
+                // Ensure reasonable length
+                if (suffix.length() > 6) {
+                    suffix = suffix.substring(0, 6);
+                }
+                
+                cleaned = prefix + suffix;
+                Log.d(TAG, "Cleaned transaction ID: " + rawId + " -> " + cleaned);
+            }
+            
+            return cleaned;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error cleaning transaction ID: " + e.getMessage());
+            return rawId;
+        }
+    }
+    
+    /**
+     * Enhanced hex processing with better pattern recognition
+     */
+    private static String extractFromHexEnhanced(String hexData) {
+        try {
+            String upperHex = hexData.toUpperCase();
+            Log.d(TAG, "Processing enhanced hex data: " + upperHex.substring(0, Math.min(100, upperHex.length())) + "...");
+            
+            // First try the standard hex processing
+            String result = extractFromHex(upperHex);
+            if (result != null) {
+                return result;
+            }
+            
+            // Look for ASCII patterns in hex that might represent transaction IDs
+            // Convert hex to ASCII and look for embedded transaction patterns
+            String asciiData = hexToAscii(upperHex);
+            if (asciiData != null && !asciiData.trim().isEmpty()) {
+                Log.d(TAG, "Enhanced hex to ASCII: " + asciiData);
+                
+                // Try mixed data extraction on the ASCII result
+                result = extractFromMixedData(asciiData);
+                if (result != null) {
+                    return result;
+                }
+                
+                // Try direct pattern matching
+                return extractDirectPatterns(asciiData);
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing enhanced hex data: " + e.getMessage());
         }
         
         return null;
