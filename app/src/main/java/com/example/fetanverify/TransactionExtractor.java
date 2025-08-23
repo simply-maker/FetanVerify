@@ -392,6 +392,14 @@ public class TransactionExtractor {
             String upperHex = hexData.toUpperCase();
             Log.d(TAG, "Processing hex data: " + upperHex.substring(0, Math.min(100, upperHex.length())) + "...");
             
+            // First, try to find transaction IDs directly in the hex string
+            // Look for hex patterns that could represent ASCII transaction IDs
+            String directResult = findTransactionInHexString(upperHex);
+            if (directResult != null) {
+                Log.d(TAG, "Found transaction ID directly in hex: " + directResult);
+                return directResult;
+            }
+            
             // Convert hex to ASCII and search
             String asciiData = hexToAscii(upperHex);
             if (asciiData != null && !asciiData.trim().isEmpty()) {
@@ -407,6 +415,40 @@ public class TransactionExtractor {
     }
     
     /**
+     * Find transaction IDs directly in hex string by looking for ASCII patterns
+     */
+    private static String findTransactionInHexString(String hexStr) {
+        try {
+            // Convert hex string to ASCII and look for patterns
+            StringBuilder ascii = new StringBuilder();
+            for (int i = 0; i < hexStr.length() - 1; i += 2) {
+                try {
+                    String hexByte = hexStr.substring(i, i + 2);
+                    int decimal = Integer.parseInt(hexByte, 16);
+                    if (decimal >= 32 && decimal <= 126) { // Printable ASCII range
+                        ascii.append((char) decimal);
+                    } else {
+                        ascii.append(' '); // Replace non-printable with space
+                    }
+                } catch (Exception e) {
+                    // Skip invalid hex bytes
+                    continue;
+                }
+            }
+            
+            String asciiString = ascii.toString();
+            Log.d(TAG, "Hex to ASCII conversion: " + asciiString);
+            
+            // Look for transaction ID patterns in the ASCII string
+            return extractDirectPatterns(asciiString);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error finding transaction in hex string: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
      * Convert hex string to ASCII
      */
     private static String hexToAscii(String hexStr) {
@@ -418,6 +460,8 @@ public class TransactionExtractor {
                     int decimal = Integer.parseInt(str, 16);
                     if (decimal >= 32 && decimal <= 126) { // Printable ASCII range
                         output.append((char) decimal);
+                    } else {
+                        output.append(' '); // Replace non-printable with space for better parsing
                     }
                 }
             }
