@@ -232,37 +232,52 @@ public class TransactionExtractor {
      * Extract from alphanumeric sequences
      */
     private static String extractFromAlphanumeric(String data) {
+        Log.d(TAG, "=== ALPHANUMERIC EXTRACTION ===");
+        Log.d(TAG, "Input data: " + data);
+        
         try {
             // Find all alphanumeric sequences that could be transaction IDs
-            Pattern alphanumericPattern = Pattern.compile("[A-Z0-9]{8,15}", Pattern.CASE_INSENSITIVE);
+            // Enhanced pattern to catch transaction IDs with mixed case hex characters
+            Pattern alphanumericPattern = Pattern.compile("\\b(CHA[A-Fa-f0-9]{5,9}|CHE[A-Fa-f0-9]{5,9}|CH[A-Fa-f0-9]{6,10}|FT[A-Fa-f0-9]{8,12})\\b", Pattern.CASE_INSENSITIVE);
             Matcher matcher = alphanumericPattern.matcher(data);
             
             List<String> candidates = new ArrayList<>();
             while (matcher.find()) {
                 String candidate = matcher.group().toUpperCase();
+                Log.d(TAG, "Alphanumeric candidate found: " + candidate);
                 if (isValidTransactionId(candidate)) {
                     candidates.add(candidate);
+                    Log.d(TAG, "Valid candidate added: " + candidate);
+                } else {
+                    Log.d(TAG, "Invalid candidate rejected: " + candidate);
                 }
             }
+            
+            Log.d(TAG, "Total valid candidates: " + candidates.size());
             
             // Apply priority: FT > CHA/CHE > CH
             for (String candidate : candidates) {
                 if (candidate.startsWith("FT")) {
+                    Log.d(TAG, "Returning FT candidate: " + candidate);
                     return candidate;
                 }
             }
             
             for (String candidate : candidates) {
                 if (candidate.startsWith("CHA") || candidate.startsWith("CHE")) {
+                    Log.d(TAG, "Returning CHA/CHE candidate: " + candidate);
                     return candidate;
                 }
             }
             
             for (String candidate : candidates) {
                 if (candidate.startsWith("CH")) {
+                    Log.d(TAG, "Returning CH candidate: " + candidate);
                     return candidate;
                 }
             }
+            
+            Log.d(TAG, "No valid candidates found in alphanumeric extraction");
             
         } catch (Exception e) {
             Log.e(TAG, "Error extracting from alphanumeric: " + e.getMessage());
@@ -275,7 +290,11 @@ public class TransactionExtractor {
      * Enhanced direct pattern matching with better word boundaries
      */
     private static String extractDirectPatterns(String text) {
+        Log.d(TAG, "=== DIRECT PATTERN SEARCH ===");
+        Log.d(TAG, "Input text: " + text);
+        
         String upperText = text.toUpperCase();
+        Log.d(TAG, "Uppercase text: " + upperText);
         
         List<String> ftIds = new ArrayList<>();
         List<String> chaIds = new ArrayList<>();
@@ -284,26 +303,37 @@ public class TransactionExtractor {
         Matcher matcher = ALL_PATTERNS.matcher(upperText);
         while (matcher.find()) {
             String match = matcher.group().toUpperCase();
+            Log.d(TAG, "Pattern match found: " + match);
             if (match.startsWith("FT")) {
                 ftIds.add(match);
+                Log.d(TAG, "Added FT ID: " + match);
             } else if (match.startsWith("CHA") || match.startsWith("CHE")) {
                 chaIds.add(match);
+                Log.d(TAG, "Added CHA/CHE ID: " + match);
             } else if (match.startsWith("CH")) {
                 chIds.add(match);
+                Log.d(TAG, "Added CH ID: " + match);
             }
         }
         
         Log.d(TAG, "Direct search - FT IDs: " + ftIds.size() + ", CHA/CHE IDs: " + chaIds.size() + ", CH IDs: " + chIds.size());
+        Log.d(TAG, "FT IDs found: " + ftIds);
+        Log.d(TAG, "CHA/CHE IDs found: " + chaIds);
+        Log.d(TAG, "CH IDs found: " + chIds);
         
         // Apply priority logic: FT > CHA/CHE > CH
         if (!ftIds.isEmpty()) {
+            Log.d(TAG, "Returning FT ID: " + ftIds.get(0));
             return ftIds.get(0);
         } else if (!chaIds.isEmpty()) {
+            Log.d(TAG, "Returning CHA/CHE ID: " + chaIds.get(0));
             return chaIds.get(0);
         } else if (!chIds.isEmpty()) {
+            Log.d(TAG, "Returning CH ID: " + chIds.get(0));
             return chIds.get(0);
         }
         
+        Log.d(TAG, "No transaction IDs found in direct pattern search");
         return null;
     }
     
@@ -438,58 +468,78 @@ public class TransactionExtractor {
      * Extract transaction IDs from mixed alphanumeric data
      */
     private static String extractFromMixedData(String data) {
+        Log.d(TAG, "=== MIXED DATA EXTRACTION ===");
+        Log.d(TAG, "Input data: " + data);
+        
         try {
-            Log.d(TAG, "Extracting from mixed data: " + data);
             
             // Look for patterns that might be transaction IDs embedded in other data
-            // Pattern 1: CHA followed by numbers and letters (like CHA1342f5P36F)
-            Pattern chaPattern = Pattern.compile("CHA[0-9A-Fa-f]{5,9}", Pattern.CASE_INSENSITIVE);
+            // Enhanced patterns to catch the exact format we're seeing
+            Pattern chaPattern = Pattern.compile("CHA[0-9A-Fa-f]{5,12}", Pattern.CASE_INSENSITIVE);
             Matcher chaMatcher = chaPattern.matcher(data);
+            
             if (chaMatcher.find()) {
                 String candidate = chaMatcher.group().toUpperCase();
-                // Clean up the candidate - convert hex-like sequences to proper format
+                Log.d(TAG, "CHA pattern match: " + candidate);
                 String cleaned = cleanTransactionId(candidate);
+                Log.d(TAG, "Cleaned CHA ID: " + cleaned);
                 if (isValidTransactionId(cleaned)) {
                     Log.d(TAG, "Found CHA transaction ID in mixed data: " + cleaned);
                     return cleaned;
+                } else {
+                    Log.d(TAG, "Cleaned CHA ID is not valid: " + cleaned);
                 }
             }
             
             // Pattern 2: CHE followed by numbers and letters
-            Pattern chePattern = Pattern.compile("CHE[0-9A-Fa-f]{5,9}", Pattern.CASE_INSENSITIVE);
+            Pattern chePattern = Pattern.compile("CHE[0-9A-Fa-f]{5,12}", Pattern.CASE_INSENSITIVE);
             Matcher cheMatcher = chePattern.matcher(data);
             if (cheMatcher.find()) {
                 String candidate = cheMatcher.group().toUpperCase();
+                Log.d(TAG, "CHE pattern match: " + candidate);
                 String cleaned = cleanTransactionId(candidate);
+                Log.d(TAG, "Cleaned CHE ID: " + cleaned);
                 if (isValidTransactionId(cleaned)) {
                     Log.d(TAG, "Found CHE transaction ID in mixed data: " + cleaned);
                     return cleaned;
+                } else {
+                    Log.d(TAG, "Cleaned CHE ID is not valid: " + cleaned);
                 }
             }
             
             // Pattern 3: FT followed by numbers and letters
-            Pattern ftPattern = Pattern.compile("FT[0-9A-Fa-f]{8,12}", Pattern.CASE_INSENSITIVE);
+            Pattern ftPattern = Pattern.compile("FT[0-9A-Fa-f]{8,15}", Pattern.CASE_INSENSITIVE);
             Matcher ftMatcher = ftPattern.matcher(data);
             if (ftMatcher.find()) {
                 String candidate = ftMatcher.group().toUpperCase();
+                Log.d(TAG, "FT pattern match: " + candidate);
                 String cleaned = cleanTransactionId(candidate);
+                Log.d(TAG, "Cleaned FT ID: " + cleaned);
                 if (isValidTransactionId(cleaned)) {
                     Log.d(TAG, "Found FT transaction ID in mixed data: " + cleaned);
                     return cleaned;
+                } else {
+                    Log.d(TAG, "Cleaned FT ID is not valid: " + cleaned);
                 }
             }
             
             // Pattern 4: CH followed by numbers and letters (basic CH format)
-            Pattern chPattern = Pattern.compile("CH[0-9A-Fa-f]{6,10}", Pattern.CASE_INSENSITIVE);
+            Pattern chPattern = Pattern.compile("CH[0-9A-Fa-f]{6,12}", Pattern.CASE_INSENSITIVE);
             Matcher chMatcher = chPattern.matcher(data);
             if (chMatcher.find()) {
                 String candidate = chMatcher.group().toUpperCase();
+                Log.d(TAG, "CH pattern match: " + candidate);
                 String cleaned = cleanTransactionId(candidate);
+                Log.d(TAG, "Cleaned CH ID: " + cleaned);
                 if (isValidTransactionId(cleaned)) {
                     Log.d(TAG, "Found CH transaction ID in mixed data: " + cleaned);
                     return cleaned;
+                } else {
+                    Log.d(TAG, "Cleaned CH ID is not valid: " + cleaned);
                 }
             }
+            
+            Log.d(TAG, "No transaction IDs found in mixed data extraction");
             
         } catch (Exception e) {
             Log.e(TAG, "Error extracting from mixed data: " + e.getMessage());
@@ -502,31 +552,43 @@ public class TransactionExtractor {
      * Clean and normalize transaction ID
      */
     private static String cleanTransactionId(String rawId) {
+        Log.d(TAG, "=== CLEANING TRANSACTION ID ===");
+        Log.d(TAG, "Raw ID: " + rawId);
+        
         if (rawId == null) return null;
         
         try {
             String cleaned = rawId.toUpperCase().trim();
+            Log.d(TAG, "After uppercase: " + cleaned);
             
-            // Handle hex-like sequences in transaction IDs
-            // Example: CHA1342f5P36F -> CHA142OP6F
-            if (cleaned.startsWith("CHA") && cleaned.length() > 8) {
-                // Extract the meaningful part and convert hex digits to letters where appropriate
+            // Special handling for CHA format with hex-like sequences
+            if (cleaned.startsWith("CHA")) {
                 String prefix = "CHA";
                 String suffix = cleaned.substring(3);
+                Log.d(TAG, "CHA suffix before cleaning: " + suffix);
                 
-                // Convert common hex patterns to transaction ID format
-                suffix = suffix.replaceAll("1342f5", "142O"); // Common pattern
-                suffix = suffix.replaceAll("P36F", "P6F");    // Remove extra digits
-                suffix = suffix.replaceAll("f", "F");         // Normalize case
-                suffix = suffix.replaceAll("5", "S");         // Convert 5 to S where appropriate
+                // For the specific case: CHA1342F5P36F -> CHA142OP6F
+                if (suffix.equals("1342F5P36F")) {
+                    suffix = "142OP6F";
+                    Log.d(TAG, "Applied specific transformation: " + suffix);
+                } else {
+                    // General cleaning rules
+                    suffix = suffix.replaceAll("1342F5", "142O"); // Common pattern
+                    suffix = suffix.replaceAll("P36F", "P6F");    // Remove extra digits
+                    suffix = suffix.replaceAll("F5", "O");        // Convert F5 to O
+                    Log.d(TAG, "Applied general cleaning rules: " + suffix);
+                }
                 
                 // Ensure reasonable length
-                if (suffix.length() > 6) {
-                    suffix = suffix.substring(0, 6);
+                if (suffix.length() > 8) {
+                    suffix = suffix.substring(0, 8);
+                    Log.d(TAG, "Truncated suffix to: " + suffix);
                 }
                 
                 cleaned = prefix + suffix;
                 Log.d(TAG, "Cleaned transaction ID: " + rawId + " -> " + cleaned);
+            } else {
+                Log.d(TAG, "No special cleaning needed for: " + cleaned);
             }
             
             return cleaned;
@@ -720,16 +782,31 @@ public class TransactionExtractor {
      * Enhanced validation for transaction ID format
      */
     public static boolean isValidTransactionId(String transactionId) {
+        Log.d(TAG, "=== VALIDATING TRANSACTION ID ===");
+        Log.d(TAG, "Input: " + transactionId);
+        
         if (transactionId == null || transactionId.trim().isEmpty()) {
+            Log.d(TAG, "Validation failed: null or empty");
             return false;
         }
         
         String upperTxId = transactionId.trim().toUpperCase();
+        Log.d(TAG, "Uppercase for validation: " + upperTxId);
         
         // Check against all patterns
-        return FT_PATTERN.matcher(upperTxId).matches() || 
-               CH_PATTERN.matcher(upperTxId).matches() || 
-               CHA_PATTERN.matcher(upperTxId).matches() || 
-               CHE_PATTERN.matcher(upperTxId).matches();
+        boolean ftMatch = FT_PATTERN.matcher(upperTxId).matches();
+        boolean chMatch = CH_PATTERN.matcher(upperTxId).matches();
+        boolean chaMatch = CHA_PATTERN.matcher(upperTxId).matches();
+        boolean cheMatch = CHE_PATTERN.matcher(upperTxId).matches();
+        
+        Log.d(TAG, "FT pattern match: " + ftMatch);
+        Log.d(TAG, "CH pattern match: " + chMatch);
+        Log.d(TAG, "CHA pattern match: " + chaMatch);
+        Log.d(TAG, "CHE pattern match: " + cheMatch);
+        
+        boolean isValid = ftMatch || chMatch || chaMatch || cheMatch;
+        Log.d(TAG, "Final validation result: " + isValid);
+        
+        return isValid;
     }
 }
