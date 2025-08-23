@@ -129,27 +129,32 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Raw QR scan result: " + transactionId);
                         if (transactionId != null) {
                             try {
-                                String extractedId = TransactionExtractor.extractTransactionId(transactionId.trim());
+                                String extractedId = TransactionExtractor.extractTransactionId(transactionId);
                                 Log.d(TAG, "Extracted transaction ID: " + extractedId);
                                 if (extractedId != null) {
                                     transactionIdEditText.setText(extractedId);
                                     verifyTransaction(extractedId);
                                 } else {
                                     Log.w(TAG, "No transaction ID found in QR scan result");
-                                    // Show FT dialog when QR scan fails to find transaction ID
+                                    // Show error message and FT dialog for failed QR scans
+                                    showAlert("QR code scanned but no valid transaction ID found. Please try manual entry or SMS scan.", "error");
                                     showFTIdDialog();
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "Error processing QR scan result: " + e.getMessage(), e);
+                                showAlert("Error processing QR code: " + e.getMessage(), "error");
                                 showFTIdDialog();
                             }
                         } else {
                             Log.w(TAG, "QR scan result is null");
+                            showAlert("QR scan failed to capture data", "error");
                             showFTIdDialog();
                         }
                     } else {
                         Log.w(TAG, "QR scan cancelled or failed");
-                        Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
+                        if (result.getResultCode() != RESULT_CANCELED) {
+                            Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
 
@@ -185,11 +190,11 @@ public class MainActivity extends AppCompatActivity {
                                     verifyTransaction(extractedId);
                                 } else {
                                     Log.w(TAG, "No transaction ID found in SMS text: " + scannedText);
-                                    Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_LONG).show();
+                                    showAlert("SMS scanned but no valid transaction ID found. Raw text: " + scannedText.substring(0, Math.min(100, scannedText.length())), "error");
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "Error processing SMS scan result: " + e.getMessage(), e);
-                                Toast.makeText(this, "Error processing SMS: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                showAlert("Error processing SMS: " + e.getMessage(), "error");
                             }
                         } else {
                             Log.w(TAG, "SMS scan result is null");
@@ -197,7 +202,9 @@ public class MainActivity extends AppCompatActivity {
                         }
                     } else {
                         Log.w(TAG, "SMS scan cancelled or failed");
-                        Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
+                        if (result.getResultCode() != RESULT_CANCELED) {
+                            Toast.makeText(this, getString(R.string.scan_cancelled), Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
     }
@@ -292,14 +299,17 @@ public class MainActivity extends AppCompatActivity {
                     verifyTransaction(extractedId);
                 } else {
                     Log.w(TAG, "No transaction ID found in QR image");
+                    showAlert("QR image processed but no valid transaction ID found", "error");
                     showFTIdDialog();
                 }
             } else {
                 Log.w(TAG, "No QR code found in image");
+                showAlert("No QR code detected in the selected image", "error");
                 showFTIdDialog();
             }
         } catch (IOException e) {
             Log.e(TAG, "Error processing image: " + e.getMessage(), e);
+            showAlert("Error processing image: " + e.getMessage(), "error");
             showFTIdDialog();
         } finally {
             showLoading(false);
@@ -496,9 +506,23 @@ public class MainActivity extends AppCompatActivity {
 
         // Show FT dialog for any CH format transaction that fails verification
         if (TransactionExtractor.isCHFormat(transactionId)) {
+            Log.d(TAG, "CH format transaction failed verification, showing FT dialog");
             showFTIdDialog();
         } else {
             VerificationPopup.showErrorPopup(MainActivity.this, transactionId != null ? transactionId : "N/A");
         }
+    }
+    
+    /**
+     * Show alert message to user
+     */
+    private void showAlert(String message, String type) {
+        runOnUiThread(() -> {
+            if ("error".equals(type)) {
+                Toast.makeText(this, "⚠️ " + message, Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

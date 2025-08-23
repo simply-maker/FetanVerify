@@ -99,7 +99,15 @@ public class CameraScanActivity extends AppCompatActivity {
             new ImageCapture.OnImageCapturedCallback() {
                 @Override
                 public void onCaptureSuccess(@NonNull ImageProxy image) {
-                    processCapturedImage(image);
+                    try {
+                        processCapturedImage(image);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error in onCaptureSuccess: " + e.getMessage(), e);
+                        runOnUiThread(() -> {
+                            Toast.makeText(CameraScanActivity.this, "Error capturing image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            resetCaptureButton();
+                        });
+                    }
                 }
                 
                 @Override
@@ -119,19 +127,20 @@ public class CameraScanActivity extends AppCompatActivity {
             
             if (bitmap != null) {
                 Log.d(TAG, "Processing captured bitmap: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-                // Use ML Kit OCR to extract text
+                
+                // Use enhanced ML Kit OCR to extract text
                 SMSTextExtractor.extractTextFromBitmap(bitmap)
                     .thenAccept(extractedText -> {
                         runOnUiThread(() -> {
-                            if (extractedText != null && !extractedText.trim().isEmpty() && 
-                                TransactionExtractor.isValidTransactionId(extractedText)) {
+                            if (extractedText != null && !extractedText.trim().isEmpty()) {
+                                Log.d(TAG, "Extracted text from camera: " + extractedText);
                                 Intent resultIntent = new Intent();
                                 resultIntent.putExtra("SCAN_RESULT", extractedText);
                                 setResult(RESULT_OK, resultIntent);
                                 finish();
                             } else {
-                                Log.w(TAG, "No valid transaction ID found in captured image");
-                                Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_LONG).show();
+                                Log.w(TAG, "No text extracted from captured image");
+                                Toast.makeText(this, "No text found in the captured image. Please ensure the SMS text is clear and well-lit.", Toast.LENGTH_LONG).show();
                                 resetCaptureButton();
                             }
                         });
@@ -139,14 +148,14 @@ public class CameraScanActivity extends AppCompatActivity {
                     .exceptionally(throwable -> {
                         runOnUiThread(() -> {
                             Log.e(TAG, "OCR processing failed", throwable);
-                            Toast.makeText(this, getString(R.string.error_processing_image), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Failed to process image: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
                             resetCaptureButton();
                         });
                         return null;
                     });
             } else {
                 Log.e(TAG, "Failed to convert ImageProxy to Bitmap");
-                Toast.makeText(this, getString(R.string.error_processing_image), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Failed to process captured image", Toast.LENGTH_SHORT).show();
                 resetCaptureButton();
             }
         } finally {

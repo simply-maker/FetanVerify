@@ -74,10 +74,10 @@
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR Verification Failed</string>
-    <string name="qr_failed_message">The QR code verification failed. Please ask the customer for their FT ID from their Telebirr SMS or scan their SMS text.</string>
+    <string name="qr_failed_message">The QR code could not be processed or no valid transaction ID was found. Please ask the customer for their FT ID from their Telebirr SMS or scan their SMS text message directly.</string>
     <string name="enter_ft_manually">Enter FT ID Manually</string>
     <string name="scan_sms_for_ft">Scan SMS for FT ID</string>
-    <string name="ft_id_hint">Enter FT ID (e.g., FT1234567890)</string>
+    <string name="ft_id_hint">Enter FT ID (e.g., FT25223YZCK7)</string>
     <string name="invalid_ft_format">Invalid FT ID format. Please enter a valid FT ID.</string>
     
     <!-- Language Selection -->
@@ -93,6 +93,11 @@
     
     <!-- Camera Scan Activity -->
     <string name="scan_sms_instruction">Point camera at SMS text message</string>
-    <string name="scan_sms_tip">Make sure the text is clear and well-lit</string>
+    <string name="scan_sms_tip">Make sure the SMS text is clear, well-lit, and fills most of the screen</string>
     <string name="capture">Capture</string>
+    
+    <!-- Enhanced error messages -->
+    <string name="qr_processing_failed">Failed to process QR code. Please try again or use manual entry.</string>
+    <string name="sms_processing_failed">Failed to extract transaction ID from SMS. Please check the text is clear.</string>
+    <string name="invalid_qr_data">QR code contains invalid or unrecognized data format.</string>
 </resources>

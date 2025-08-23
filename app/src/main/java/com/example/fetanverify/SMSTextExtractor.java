@@ -1,6 +1,10 @@
 package com.example.fetanverify;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.util.Log;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.TextRecognition;
@@ -60,13 +64,22 @@ public class SMSTextExtractor {
                         return;
                     }
                     
-                    // Process the extracted text to find transaction IDs
-                    String transactionId = TransactionExtractor.extractTransactionId(extractedText);
+                    // Enhanced text processing for better transaction ID extraction
+                    String processedText = preprocessSMSText(extractedText);
+                    Log.d(TAG, "Preprocessed SMS text: " + processedText);
+                    
+                    // Use enhanced transaction extractor
+                    String transactionId = TransactionExtractor.extractTransactionId(processedText);
                     
                     if (transactionId != null) {
                         Log.d(TAG, "Successfully extracted transaction ID: " + transactionId);
                     } else {
                         Log.w(TAG, "No transaction ID found in extracted text");
+                        // Try with original text as fallback
+                        transactionId = TransactionExtractor.extractTransactionId(extractedText);
+                        if (transactionId != null) {
+                            Log.d(TAG, "Found transaction ID in original text: " + transactionId);
+                        }
                     }
                     
                     future.complete(transactionId);
@@ -85,27 +98,61 @@ public class SMSTextExtractor {
     }
     
     /**
-     * Enhance bitmap for better OCR results
+     * Preprocess SMS text for better transaction ID extraction
+     */
+    private static String preprocessSMSText(String rawText) {
+        if (rawText == null || rawText.trim().isEmpty()) {
+            return rawText;
+        }
+        
+        try {
+            // Remove common OCR artifacts and normalize text
+            String processed = rawText
+                // Fix common OCR mistakes
+                .replaceAll("[oO0]", "0")  // Replace O with 0 in transaction IDs
+                .replaceAll("[Il1]", "1")  // Replace I, l with 1
+                .replaceAll("[S5]", "5")   // Replace S with 5 in some cases
+                // Remove extra whitespace and normalize
+                .replaceAll("\\s+", " ")
+                .trim();
+            
+            // Look for common SMS patterns and extract relevant parts
+            String[] lines = processed.split("\n");
+            StringBuilder relevantText = new StringBuilder();
+            
+            for (String line : lines) {
+                String upperLine = line.toUpperCase();
+                // Include lines that might contain transaction IDs
+                if (upperLine.contains("FT") || 
+                    upperLine.contains("CH") || 
+                    upperLine.contains("TRANSACTION") ||
+                    upperLine.contains("REFERENCE") ||
+                    upperLine.contains("ID") ||
+                    upperLine.matches(".*[A-Z]{2,3}[0-9A-Z]{6,12}.*")) {
+                    relevantText.append(line).append(" ");
+                }
+            }
+            
+            String result = relevantText.toString().trim();
+            return result.isEmpty() ? processed : result;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error preprocessing SMS text: " + e.getMessage());
+            return rawText;
+        }
+    }
+    
+    /**
+     * Enhanced bitmap processing for better OCR results
      */
     private static Bitmap enhanceBitmapForOCR(Bitmap originalBitmap) {
         try {
             // Create a mutable copy
             Bitmap enhancedBitmap = originalBitmap.copy(Bitmap.Config.ARGB_8888, true);
             
-            // Apply contrast and brightness adjustments
-            android.graphics.ColorMatrix colorMatrix = new android.graphics.ColorMatrix();
-            colorMatrix.set(new float[] {
-                1.2f, 0, 0, 0, 20,     // Red
-                0, 1.2f, 0, 0, 20,     // Green  
-                0, 0, 1.2f, 0, 20,     // Blue
-                0, 0, 0, 1, 0          // Alpha
-            });
-            
-            android.graphics.ColorMatrixColorFilter filter = new android.graphics.ColorMatrixColorFilter(colorMatrix);
-            android.graphics.Canvas canvas = new android.graphics.Canvas(enhancedBitmap);
-            android.graphics.Paint paint = new android.graphics.Paint();
-            paint.setColorFilter(filter);
-            canvas.drawBitmap(originalBitmap, 0, 0, paint);
+            // Apply multiple enhancement techniques
+            enhancedBitmap = adjustContrast(enhancedBitmap, 1.5f, 30);
+            enhancedBitmap = sharpenImage(enhancedBitmap);
             
             Log.d(TAG, "Bitmap enhanced for OCR");
             return enhancedBitmap;
@@ -113,6 +160,63 @@ public class SMSTextExtractor {
         } catch (Exception e) {
             Log.w(TAG, "Failed to enhance bitmap, using original: " + e.getMessage());
             return originalBitmap;
+        }
+    }
+    
+    /**
+     * Adjust contrast and brightness
+     */
+    private static Bitmap adjustContrast(Bitmap bitmap, float contrast, float brightness) {
+        try {
+            Bitmap adjustedBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+            
+            ColorMatrix colorMatrix = new ColorMatrix();
+            colorMatrix.set(new float[] {
+                contrast, 0, 0, 0, brightness,     // Red
+                0, contrast, 0, 0, brightness,     // Green  
+                0, 0, contrast, 0, brightness,     // Blue
+                0, 0, 0, 1, 0                      // Alpha
+            });
+            
+            ColorMatrixColorFilter filter = new ColorMatrixColorFilter(colorMatrix);
+            Canvas canvas = new Canvas(adjustedBitmap);
+            Paint paint = new Paint();
+            paint.setColorFilter(filter);
+            canvas.drawBitmap(bitmap, 0, 0, paint);
+            
+            return adjustedBitmap;
+            
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to adjust contrast: " + e.getMessage());
+            return bitmap;
+        }
+    }
+    
+    /**
+     * Apply sharpening filter
+     */
+    private static Bitmap sharpenImage(Bitmap bitmap) {
+        try {
+            Bitmap sharpenedBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+            
+            // Simple sharpening using ColorMatrix
+            ColorMatrix sharpenMatrix = new ColorMatrix(new float[] {
+                0, -1, 0,
+                -1, 5, -1,
+                0, -1, 0
+            });
+            
+            ColorMatrixColorFilter filter = new ColorMatrixColorFilter(sharpenMatrix);
+            Canvas canvas = new Canvas(sharpenedBitmap);
+            Paint paint = new Paint();
+            paint.setColorFilter(filter);
+            canvas.drawBitmap(bitmap, 0, 0, paint);
+            
+            return sharpenedBitmap;
+            
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to sharpen image: " + e.getMessage());
+            return bitmap;
         }
     }
     
