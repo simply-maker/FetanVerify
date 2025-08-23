@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -286,8 +287,14 @@ public class MainActivity extends AppCompatActivity {
         try {
             Log.d(TAG, "Processing QR image from URI: " + imageUri);
             showLoading(true);
-            ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
-            Bitmap bitmap = ImageDecoder.decodeBitmap(source);
+            ImageDecoder.Source source = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                source = ImageDecoder.createSource(getContentResolver(), imageUri);
+            }
+            Bitmap bitmap = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                bitmap = ImageDecoder.decodeBitmap(source);
+            }
             Log.d(TAG, "Bitmap loaded successfully, size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
             String qrContent = decodeQRCode(bitmap);
             Log.d(TAG, "QR content decoded: " + qrContent);
