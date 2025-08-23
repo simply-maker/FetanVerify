@@ -209,6 +209,8 @@ public class MainActivity extends AppCompatActivity {
             if (decoded != null) {
                 Log.d(TAG, "extractTransactionId: Successfully decoded Base64 to: " + decoded);
                 return decoded;
+            } else {
+                Log.d(TAG, "extractTransactionId: Base64 decoding failed, treating as regular text");
             }
         }
 
@@ -280,26 +282,8 @@ public class MainActivity extends AppCompatActivity {
                 return transactionId;
             }
 
-            // Also try direct string conversion
-            String decodedString = new String(decodedBytes);
-            Log.d(TAG, "decodeBase64QR: Decoded to string: " + decodedString);
-
-            // Try to extract FT ID from decoded string
-            String ftFromString = extractFTFromText(decodedString);
-            if (ftFromString != null) {
-                Log.d(TAG, "decodeBase64QR: Found FT ID in decoded string: " + ftFromString);
-                return ftFromString;
-            }
-
-            // Try to extract CH ID from decoded string
-            String chFromString = extractCHFromText(decodedString);
-            if (chFromString != null) {
-                Log.d(TAG, "decodeBase64QR: Found CH ID in decoded string: " + chFromString);
-                return chFromString;
-            }
-
-            Log.d(TAG, "decodeBase64QR: No transaction ID patterns found, returning raw decoded string");
-            return decodedString; // Return raw decoded string if no pattern matches
+            Log.d(TAG, "decodeBase64QR: No transaction ID found in hex data");
+            return null;
 
         } catch (Exception e) {
             Log.e(TAG, "decodeBase64QR: Error decoding Base64: " + e.getMessage());
@@ -312,59 +296,50 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "extractTransactionFromHex: Processing hex data: " + hexData);
 
             // Look for CHE pattern in hex (CHE = 434845)
-            int cheHexIndex = hexData.toUpperCase().indexOf("434845");
+
+            String upperHexData = hexData.toUpperCase();
+            
+            // Look for CHE pattern in hex (CHE = 434845)
+            int cheHexIndex = upperHexData.indexOf("434845");
             if (cheHexIndex != -1) {
                 Log.d(TAG, "extractTransactionFromHex: Found CHE hex pattern at index: " + cheHexIndex);
                 
-                // Extract from CHE position onwards, but limit to reasonable length (20 hex chars = 10 ASCII chars)
+                // Extract exactly 20 hex characters (10 ASCII chars) from CHE position
                 int endIndex = Math.min(cheHexIndex + 20, hexData.length());
-                String cheSection = hexData.substring(cheHexIndex, endIndex);
-                Log.d(TAG, "extractTransactionFromHex: CHE hex section: " + cheSection);
-                
-                String asciiResult = hexToAscii(cheSection);
-                if (asciiResult != null && asciiResult.startsWith("CHE") && asciiResult.length() >= 10) {
-                    String cheId = asciiResult.substring(0, 10);
-                    Log.d(TAG, "extractTransactionFromHex: Extracted CHE ID: " + cheId);
-                    return cheId;
+                if (endIndex - cheHexIndex >= 20) {
+                    String cheSection = hexData.substring(cheHexIndex, cheHexIndex + 20);
+                    Log.d(TAG, "extractTransactionFromHex: CHE hex section: " + cheSection);
+                    
+                    String asciiResult = hexToAscii(cheSection);
+                    if (asciiResult != null && asciiResult.length() >= 10) {
+                        String cheId = asciiResult.substring(0, 10);
+                        Log.d(TAG, "extractTransactionFromHex: Extracted CHE ID: " + cheId);
+                        return cheId;
+                    }
                 }
             }
             
             // Look for CH pattern in hex (CH = 4348) - only if CHE not found
-            int chHexIndex = hexData.toUpperCase().indexOf("4348");
-            if (chHexIndex != -1) {
+            int chHexIndex = upperHexData.indexOf("4348");
+            if (chHexIndex != -1 && !upperHexData.substring(Math.max(0, chHexIndex-2), chHexIndex + 6).contains("434845")) {
                 Log.d(TAG, "extractTransactionFromHex: Found CH hex pattern at index: " + chHexIndex);
                 
-                // Extract from CH position onwards, but limit to reasonable length (20 hex chars = 10 ASCII chars)
+                // Extract exactly 20 hex characters (10 ASCII chars) from CH position
                 int endIndex = Math.min(chHexIndex + 20, hexData.length());
-                String chSection = hexData.substring(chHexIndex, endIndex);
-                Log.d(TAG, "extractTransactionFromHex: CH hex section: " + chSection);
-                
-                String asciiResult = hexToAscii(chSection);
-                if (asciiResult != null && asciiResult.startsWith("CH") && asciiResult.length() >= 10) {
-                    String chId = asciiResult.substring(0, 10);
-                    Log.d(TAG, "extractTransactionFromHex: Extracted CH ID: " + chId);
-                    return chId;
+                if (endIndex - chHexIndex >= 20) {
+                    String chSection = hexData.substring(chHexIndex, chHexIndex + 20);
+                    Log.d(TAG, "extractTransactionFromHex: CH hex section: " + chSection);
+                    
+                    String asciiResult = hexToAscii(chSection);
+                    if (asciiResult != null && asciiResult.length() >= 10) {
+                        String chId = asciiResult.substring(0, 10);
+                        Log.d(TAG, "extractTransactionFromHex: Extracted CH ID: " + chId);
+                        return chId;
+                    }
                 }
             }
 
-            // Try to convert entire hex to ASCII and look for patterns
-            String asciiFromHex = hexToAscii(hexData);
-            if (asciiFromHex != null) {
-                Log.d(TAG, "extractTransactionFromHex: Full ASCII from hex: " + asciiFromHex);
-
-                // Look for CHE/CH patterns in the full ASCII string
-                String cheId = extractCHFromText(asciiFromHex);
-                if (cheId != null) {
-                    return cheId;
-                }
-
-                // Look for FT pattern in ASCII
-                String ftId = extractFTFromText(asciiFromHex);
-                if (ftId != null) {
-                    return ftId;
-                }
-            }
-
+            Log.d(TAG, "extractTransactionFromHex: No valid CH/CHE pattern found in hex data");
             return null;
         } catch (Exception e) {
             Log.e(TAG, "extractTransactionFromHex: Error extracting from hex: " + e.getMessage());
