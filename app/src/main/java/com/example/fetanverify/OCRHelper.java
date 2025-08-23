@@ -10,10 +10,10 @@ public class OCRHelper {
     private static final String TAG = "OCRHelper";
     
     // Regex patterns for different transaction ID formats
-    private static final Pattern FT_PATTERN = Pattern.compile("FT[A-Z0-9]{10,12}");
-    private static final Pattern CHA_PATTERN = Pattern.compile("CHA[A-Z0-9]{6}");
-    private static final Pattern CH_PATTERN = Pattern.compile("CH[A-Z0-9]{8,12}");
-    private static final Pattern CHE_PATTERN = Pattern.compile("CHE[A-Z0-9]{5,10}");
+    private static final Pattern FT_PATTERN = Pattern.compile("FT[A-Za-z0-9]{10,12}", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CHA_PATTERN = Pattern.compile("CHA[A-Za-z0-9]{6}", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CH_PATTERN = Pattern.compile("CH[A-Za-z0-9]{8,12}", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CHE_PATTERN = Pattern.compile("CHE[A-Za-z0-9]{5,10}", Pattern.CASE_INSENSITIVE);
     
     /**
      * Extract FT transaction ID from SMS text
@@ -25,7 +25,7 @@ public class OCRHelper {
         }
         
         // Clean the text and convert to uppercase for better matching
-        String cleanText = smsText.toUpperCase().replaceAll("\\s+", " ");
+        String cleanText = smsText.replaceAll("\\s+", " ");
         Log.d(TAG, "extractFTFromSMS: Searching for FT ID in text: " + cleanText);
         
         Matcher ftMatcher = FT_PATTERN.matcher(cleanText);

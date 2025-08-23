@@ -373,11 +373,11 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
 
-        String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
+        String cleanText = text.replaceAll("\\s+", " ");
         Log.d(TAG, "extractCHFromText: Searching for CH ID in text: " + cleanText);
 
         // Look for CHA followed by exactly 6 alphanumeric characters (total 9 characters) - highest priority
-        java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Z0-9]{6}");
+        java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Za-z0-9]{6}", java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher chaMatcher = chaPattern.matcher(cleanText);
         if (chaMatcher.find()) {
             String chaId = chaMatcher.group();
@@ -386,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Look for CHE followed by exactly 7 alphanumeric characters (total 10 characters) - second priority
-        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
+        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Za-z0-9]{7}", java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
         if (cheMatcher.find()) {
             String cheId = cheMatcher.group();
@@ -395,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Look for CH followed by exactly 8 alphanumeric characters (total 10 characters) - third priority
-        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
+        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Za-z0-9]{8}", java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
         if (chMatcher.find()) {
             String chId = chMatcher.group();
@@ -411,10 +411,10 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
 
-        String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
+        String cleanText = text.replaceAll("\\s+", " ");
         Log.d(TAG, "extractFTFromText: Searching for FT ID in text: " + cleanText);
 
-        java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
+        java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Za-z0-9]{10,12}", java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
         if (ftMatcher.find()) {
             String ftId = ftMatcher.group();
@@ -432,20 +432,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Clean the text and convert to uppercase for better matching
-        String cleanText = smsText.toUpperCase().replaceAll("\\s+", " ");
+        String cleanText = smsText.replaceAll("\\s+", " ");
         Log.d(TAG, "extractFTFromSMS: Searching for FT ID in text: " + cleanText);
 
         // Look for FT, CHA, CHE, and CH patterns
-        java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
+        java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Za-z0-9]{10,12}", java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
         
-        java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Z0-9]{6}");
+        java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Za-z0-9]{6}", java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher chaMatcher = chaPattern.matcher(cleanText);
         
-        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
+        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Za-z0-9]{7}", java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
         
-        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
+        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Za-z0-9]{8}", java.util.regex.Pattern.CASE_INSENSITIVE);
         java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
         
         boolean hasFT = ftMatcher.find();
@@ -735,8 +735,7 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        String upperCaseId = transactionId.toUpperCase();
-        return upperCaseId.startsWith("CHA") || upperCaseId.startsWith("CHE") || upperCaseId.startsWith("CH");
+        return transactionId.matches("(?i)^(CHA.{6}|CHE.{7}|CH.{8})$");
     }
 
     private void showFTIdDialog() {
