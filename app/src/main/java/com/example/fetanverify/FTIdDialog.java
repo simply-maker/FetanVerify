@@ -54,7 +54,7 @@ public class FTIdDialog {
                 return;
             }
             
-            if (!FT_PATTERN.matcher(ftId).matches()) {
+            if (!TransactionExtractor.isValidTransactionId(ftId)) {
                 ftIdLayout.setError(context.getString(R.string.invalid_ft_format));
                 return;
             }

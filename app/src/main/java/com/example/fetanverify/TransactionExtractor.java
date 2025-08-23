@@ -8,19 +8,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Robust transaction ID extractor with improved pattern matching
+ * Professional Transaction ID Extractor with robust pattern matching
  */
 public class TransactionExtractor {
     private static final String TAG = "TransactionExtractor";
     
-    // Enhanced regex patterns with case insensitive matching
-    private static final Pattern FT_PATTERN = Pattern.compile("FT[A-Z0-9]{10,12}", Pattern.CASE_INSENSITIVE);
-    private static final Pattern CH_PATTERN = Pattern.compile("CH[A-Z0-9]{8,10}", Pattern.CASE_INSENSITIVE);
-    private static final Pattern CHA_PATTERN = Pattern.compile("CHA[A-Z0-9]{5,7}", Pattern.CASE_INSENSITIVE);
-    private static final Pattern CHE_PATTERN = Pattern.compile("CHE[A-Z0-9]{7,9}", Pattern.CASE_INSENSITIVE);
+    // Comprehensive regex patterns for all transaction ID formats
+    private static final Pattern FT_PATTERN = Pattern.compile("FT[A-Z0-9]{8,12}", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CH_PATTERN = Pattern.compile("CH[A-Z0-9]{6,10}", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CHA_PATTERN = Pattern.compile("CHA[A-Z0-9]{5,9}", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CHE_PATTERN = Pattern.compile("CHE[A-Z0-9]{5,9}", Pattern.CASE_INSENSITIVE);
+    
+    // Combined pattern for efficient searching
+    private static final Pattern ALL_PATTERNS = Pattern.compile(
+        "(FT[A-Z0-9]{8,12})|(CH[A-Z0-9]{6,10})|(CHA[A-Z0-9]{5,9})|(CHE[A-Z0-9]{5,9})", 
+        Pattern.CASE_INSENSITIVE
+    );
     
     /**
-     * Main extraction method with fallback strategies
+     * Main extraction method with multiple strategies
      */
     public static String extractTransactionId(String input) {
         if (input == null || input.trim().isEmpty()) {
@@ -31,15 +37,15 @@ public class TransactionExtractor {
         String cleanInput = input.trim();
         Log.d(TAG, "Processing input: " + cleanInput.substring(0, Math.min(50, cleanInput.length())) + "...");
         
-        // Strategy 1: Direct pattern matching (for plain text QR codes)
-        String directMatch = extractDirectPatterns(cleanInput);
-        if (directMatch != null) {
-            Log.d(TAG, "Direct pattern match found: " + directMatch);
-            return directMatch;
+        // Strategy 1: Direct pattern matching (most common case)
+        String directResult = extractDirectPatterns(cleanInput);
+        if (directResult != null) {
+            Log.d(TAG, "Direct pattern match found: " + directResult);
+            return directResult;
         }
         
-        // Strategy 2: Base64 decoding (for encoded QR codes)
-        if (isBase64(cleanInput)) {
+        // Strategy 2: Base64 decoding (for QR codes)
+        if (isLikelyBase64(cleanInput)) {
             String base64Result = extractFromBase64(cleanInput);
             if (base64Result != null) {
                 Log.d(TAG, "Base64 extraction successful: " + base64Result);
@@ -47,20 +53,20 @@ public class TransactionExtractor {
             }
         }
         
-        // Strategy 3: SMS text processing with priority logic
-        String smsResult = extractFromSMSWithPriority(cleanInput);
-        if (smsResult != null) {
-            Log.d(TAG, "SMS extraction successful: " + smsResult);
-            return smsResult;
-        }
-        
-        // Strategy 4: Hex string processing (fallback)
-        if (isHexString(cleanInput)) {
-            String hexResult = extractFromHexString(cleanInput);
+        // Strategy 3: Hex string processing
+        if (isLikelyHex(cleanInput)) {
+            String hexResult = extractFromHex(cleanInput);
             if (hexResult != null) {
                 Log.d(TAG, "Hex extraction successful: " + hexResult);
                 return hexResult;
             }
+        }
+        
+        // Strategy 4: SMS text processing with priority logic
+        String smsResult = extractFromSMSText(cleanInput);
+        if (smsResult != null) {
+            Log.d(TAG, "SMS extraction successful: " + smsResult);
+            return smsResult;
         }
         
         Log.d(TAG, "No transaction ID found in input");
@@ -73,26 +79,26 @@ public class TransactionExtractor {
     private static String extractDirectPatterns(String text) {
         String upperText = text.toUpperCase();
         
-        // Try FT pattern first
-        Matcher ftMatcher = FT_PATTERN.matcher(upperText);
-        if (ftMatcher.find()) {
-            return ftMatcher.group();
+        List<String> ftIds = new ArrayList<>();
+        List<String> chIds = new ArrayList<>();
+        
+        Matcher matcher = ALL_PATTERNS.matcher(upperText);
+        while (matcher.find()) {
+            String match = matcher.group().toUpperCase();
+            if (match.startsWith("FT")) {
+                ftIds.add(match);
+            } else if (match.startsWith("CH")) {
+                chIds.add(match);
+            }
         }
         
-        // Try CH patterns
-        Matcher chMatcher = CH_PATTERN.matcher(upperText);
-        if (chMatcher.find()) {
-            return chMatcher.group();
-        }
+        Log.d(TAG, "Direct search - FT IDs: " + ftIds.size() + ", CH IDs: " + chIds.size());
         
-        Matcher chaMatcher = CHA_PATTERN.matcher(upperText);
-        if (chaMatcher.find()) {
-            return chaMatcher.group();
-        }
-        
-        Matcher cheMatcher = CHE_PATTERN.matcher(upperText);
-        if (cheMatcher.find()) {
-            return cheMatcher.group();
+        // Apply priority logic: FT > CH
+        if (!ftIds.isEmpty()) {
+            return ftIds.get(0);
+        } else if (!chIds.isEmpty()) {
+            return chIds.get(0);
         }
         
         return null;
@@ -103,7 +109,7 @@ public class TransactionExtractor {
      */
     private static String extractFromBase64(String base64Data) {
         try {
-            Log.d(TAG, "Decoding Base64 data");
+            Log.d(TAG, "Attempting Base64 decode");
             byte[] decodedBytes = Base64.decode(base64Data, Base64.DEFAULT);
             
             // Convert to hex string
@@ -112,18 +118,18 @@ public class TransactionExtractor {
                 hexString.append(String.format("%02X", b & 0xFF));
             }
             String hexData = hexString.toString();
-            Log.d(TAG, "Decoded hex: " + hexData);
+            Log.d(TAG, "Base64 decoded to hex: " + hexData);
             
             // Try to extract from hex
-            String hexResult = extractFromHexData(hexData);
+            String hexResult = extractFromHex(hexData);
             if (hexResult != null) {
                 return hexResult;
             }
             
             // Try to convert to ASCII and extract
             String asciiData = hexToAscii(hexData);
-            if (asciiData != null) {
-                Log.d(TAG, "Converted to ASCII: " + asciiData);
+            if (asciiData != null && !asciiData.trim().isEmpty()) {
+                Log.d(TAG, "Base64 converted to ASCII: " + asciiData);
                 return extractDirectPatterns(asciiData);
             }
             
@@ -135,59 +141,67 @@ public class TransactionExtractor {
     }
     
     /**
-     * Extract from hex data with improved pattern recognition
+     * Extract from hex data with comprehensive pattern recognition
      */
-    private static String extractFromHexData(String hexData) {
+    private static String extractFromHex(String hexData) {
         try {
-            // Look for hex patterns that represent our transaction IDs
+            String upperHex = hexData.toUpperCase();
+            Log.d(TAG, "Processing hex data: " + upperHex.substring(0, Math.min(100, upperHex.length())) + "...");
             
-            // FT pattern in hex: 4654 + 20-24 hex chars
-            Pattern ftHexPattern = Pattern.compile("4654[A-F0-9]{20,24}");
-            Matcher ftHexMatcher = ftHexPattern.matcher(hexData);
+            // Look for specific hex patterns that represent transaction IDs
+            
+            // FT pattern in hex: 4654 + hex chars
+            Pattern ftHexPattern = Pattern.compile("4654[A-F0-9]{16,24}");
+            Matcher ftHexMatcher = ftHexPattern.matcher(upperHex);
             if (ftHexMatcher.find()) {
                 String ftHex = ftHexMatcher.group();
                 String ftAscii = hexToAscii(ftHex);
                 if (ftAscii != null && FT_PATTERN.matcher(ftAscii).matches()) {
+                    Log.d(TAG, "Found FT in hex: " + ftAscii);
                     return ftAscii;
                 }
             }
             
-            // CH pattern in hex: 4348 + 16-20 hex chars
-            Pattern chHexPattern = Pattern.compile("4348[A-F0-9]{16,20}");
-            Matcher chHexMatcher = chHexPattern.matcher(hexData);
+            // CH pattern in hex: 4348 + hex chars
+            Pattern chHexPattern = Pattern.compile("4348[A-F0-9]{12,20}");
+            Matcher chHexMatcher = chHexPattern.matcher(upperHex);
             if (chHexMatcher.find()) {
                 String chHex = chHexMatcher.group();
                 String chAscii = hexToAscii(chHex);
                 if (chAscii != null && CH_PATTERN.matcher(chAscii).matches()) {
+                    Log.d(TAG, "Found CH in hex: " + chAscii);
                     return chAscii;
                 }
             }
             
-            // CHA pattern in hex: 434841 + 10-14 hex chars
-            Pattern chaHexPattern = Pattern.compile("434841[A-F0-9]{10,14}");
-            Matcher chaHexMatcher = chaHexPattern.matcher(hexData);
+            // CHA pattern in hex: 434841 + hex chars
+            Pattern chaHexPattern = Pattern.compile("434841[A-F0-9]{10,18}");
+            Matcher chaHexMatcher = chaHexPattern.matcher(upperHex);
             if (chaHexMatcher.find()) {
                 String chaHex = chaHexMatcher.group();
                 String chaAscii = hexToAscii(chaHex);
                 if (chaAscii != null && CHA_PATTERN.matcher(chaAscii).matches()) {
+                    Log.d(TAG, "Found CHA in hex: " + chaAscii);
                     return chaAscii;
                 }
             }
             
-            // CHE pattern in hex: 434845 + 14-18 hex chars
-            Pattern cheHexPattern = Pattern.compile("434845[A-F0-9]{14,18}");
-            Matcher cheHexMatcher = cheHexPattern.matcher(hexData);
+            // CHE pattern in hex: 434845 + hex chars
+            Pattern cheHexPattern = Pattern.compile("434845[A-F0-9]{10,18}");
+            Matcher cheHexMatcher = cheHexPattern.matcher(upperHex);
             if (cheHexMatcher.find()) {
                 String cheHex = cheHexMatcher.group();
                 String cheAscii = hexToAscii(cheHex);
                 if (cheAscii != null && CHE_PATTERN.matcher(cheAscii).matches()) {
+                    Log.d(TAG, "Found CHE in hex: " + cheAscii);
                     return cheAscii;
                 }
             }
             
             // Fallback: convert entire hex to ASCII and search
-            String fullAscii = hexToAscii(hexData);
-            if (fullAscii != null) {
+            String fullAscii = hexToAscii(upperHex);
+            if (fullAscii != null && !fullAscii.trim().isEmpty()) {
+                Log.d(TAG, "Hex to ASCII fallback: " + fullAscii);
                 return extractDirectPatterns(fullAscii);
             }
             
@@ -201,61 +215,45 @@ public class TransactionExtractor {
     /**
      * SMS extraction with priority logic
      */
-    private static String extractFromSMSWithPriority(String smsText) {
+    private static String extractFromSMSText(String smsText) {
         if (smsText == null || smsText.trim().isEmpty()) {
             return null;
         }
         
         String cleanText = smsText.replaceAll("\\s+", " ").toUpperCase();
-        Log.d(TAG, "Processing SMS text with priority logic");
+        Log.d(TAG, "Processing SMS text: " + cleanText.substring(0, Math.min(100, cleanText.length())) + "...");
         
-        // Find all FT IDs
         List<String> ftIds = new ArrayList<>();
-        Matcher ftMatcher = FT_PATTERN.matcher(cleanText);
-        while (ftMatcher.find()) {
-            ftIds.add(ftMatcher.group());
-        }
-        
-        // Find all CH IDs (including CHA and CHE)
         List<String> chIds = new ArrayList<>();
         
-        Matcher chMatcher = CH_PATTERN.matcher(cleanText);
-        while (chMatcher.find()) {
-            chIds.add(chMatcher.group());
+        Matcher matcher = ALL_PATTERNS.matcher(cleanText);
+        while (matcher.find()) {
+            String match = matcher.group().toUpperCase();
+            if (match.startsWith("FT")) {
+                ftIds.add(match);
+            } else if (match.startsWith("CH")) {
+                chIds.add(match);
+            }
         }
         
-        Matcher chaMatcher = CHA_PATTERN.matcher(cleanText);
-        while (chaMatcher.find()) {
-            chIds.add(chaMatcher.group());
-        }
+        Log.d(TAG, "SMS search - FT IDs: " + ftIds.size() + ", CH IDs: " + chIds.size());
         
-        Matcher cheMatcher = CHE_PATTERN.matcher(cleanText);
-        while (cheMatcher.find()) {
-            chIds.add(cheMatcher.group());
-        }
-        
-        Log.d(TAG, "Found FT IDs: " + ftIds.size() + ", CH IDs: " + chIds.size());
-        
-        // Apply priority logic
+        // Apply SMS priority logic:
+        // If both CH and FT IDs are found → take only FT
+        // If only CH ID is found → take CH
+        // If only FT ID is found → take FT
         if (!ftIds.isEmpty() && !chIds.isEmpty()) {
-            // Both found, return FT (higher priority)
+            Log.d(TAG, "Both FT and CH found, returning FT: " + ftIds.get(0));
             return ftIds.get(0);
         } else if (!ftIds.isEmpty()) {
-            // Only FT found
+            Log.d(TAG, "Only FT found: " + ftIds.get(0));
             return ftIds.get(0);
         } else if (!chIds.isEmpty()) {
-            // Only CH found
+            Log.d(TAG, "Only CH found: " + chIds.get(0));
             return chIds.get(0);
         }
         
         return null;
-    }
-    
-    /**
-     * Extract from hex string
-     */
-    private static String extractFromHexString(String hexString) {
-        return extractFromHexData(hexString.toUpperCase());
     }
     
     /**
@@ -281,9 +279,9 @@ public class TransactionExtractor {
     }
     
     /**
-     * Check if string is Base64
+     * Check if string is likely Base64
      */
-    private static boolean isBase64(String str) {
+    private static boolean isLikelyBase64(String str) {
         if (str == null || str.length() < 4) {
             return false;
         }
@@ -294,22 +292,28 @@ public class TransactionExtractor {
                 return false;
             }
             
+            // Check if it matches Base64 pattern
+            if (!cleaned.matches("^[A-Za-z0-9+/]*={0,2}$")) {
+                return false;
+            }
+            
+            // Try to decode to verify
             Base64.decode(cleaned, Base64.DEFAULT);
-            return cleaned.matches("^[A-Za-z0-9+/]*={0,2}$");
+            return true;
         } catch (Exception e) {
             return false;
         }
     }
     
     /**
-     * Check if string is hex
+     * Check if string is likely hex
      */
-    private static boolean isHexString(String str) {
+    private static boolean isLikelyHex(String str) {
         if (str == null || str.length() < 2) {
             return false;
         }
         
-        return str.matches("^[0-9A-Fa-f]+$") && str.length() % 2 == 0;
+        return str.matches("^[0-9A-Fa-f]+$") && str.length() % 2 == 0 && str.length() > 10;
     }
     
     /**
@@ -328,5 +332,20 @@ public class TransactionExtractor {
     public static boolean isFTFormat(String transactionId) {
         if (transactionId == null) return false;
         return FT_PATTERN.matcher(transactionId).matches();
+    }
+    
+    /**
+     * Validate transaction ID format
+     */
+    public static boolean isValidTransactionId(String transactionId) {
+        if (transactionId == null || transactionId.trim().isEmpty()) {
+            return false;
+        }
+        
+        String upperTxId = transactionId.trim().toUpperCase();
+        return FT_PATTERN.matcher(upperTxId).matches() || 
+               CH_PATTERN.matcher(upperTxId).matches() || 
+               CHA_PATTERN.matcher(upperTxId).matches() || 
+               CHE_PATTERN.matcher(upperTxId).matches();
     }
 }

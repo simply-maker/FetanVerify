@@ -118,17 +118,20 @@ public class CameraScanActivity extends AppCompatActivity {
             Bitmap bitmap = imageProxyToBitmap(imageProxy);
             
             if (bitmap != null) {
+                Log.d(TAG, "Processing captured bitmap: " + bitmap.getWidth() + "x" + bitmap.getHeight());
                 // Use ML Kit OCR to extract text
                 SMSTextExtractor.extractTextFromBitmap(bitmap)
                     .thenAccept(extractedText -> {
                         runOnUiThread(() -> {
-                            if (extractedText != null && !extractedText.isEmpty()) {
+                            if (extractedText != null && !extractedText.trim().isEmpty() && 
+                                TransactionExtractor.isValidTransactionId(extractedText)) {
                                 Intent resultIntent = new Intent();
                                 resultIntent.putExtra("SCAN_RESULT", extractedText);
                                 setResult(RESULT_OK, resultIntent);
                                 finish();
                             } else {
-                                Toast.makeText(this, "No transaction ID found in the image", Toast.LENGTH_LONG).show();
+                                Log.w(TAG, "No valid transaction ID found in captured image");
+                                Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_LONG).show();
                                 resetCaptureButton();
                             }
                         });
@@ -136,13 +139,14 @@ public class CameraScanActivity extends AppCompatActivity {
                     .exceptionally(throwable -> {
                         runOnUiThread(() -> {
                             Log.e(TAG, "OCR processing failed", throwable);
-                            Toast.makeText(this, "Text extraction failed", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, getString(R.string.error_processing_image), Toast.LENGTH_SHORT).show();
                             resetCaptureButton();
                         });
                         return null;
                     });
             } else {
-                Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Failed to convert ImageProxy to Bitmap");
+                Toast.makeText(this, getString(R.string.error_processing_image), Toast.LENGTH_SHORT).show();
                 resetCaptureButton();
             }
         } finally {

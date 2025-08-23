@@ -75,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Clean up SMS text extractor
+        SMSTextExtractor.cleanup();
 
         // Apply language before setting content view
         LanguageHelper.applyLanguage(this);
@@ -276,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
     private void processQRImageFromUri(Uri imageUri) {
         try {
             Log.d(TAG, "Processing QR image from URI: " + imageUri);
+            showLoading(true);
             ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
             Bitmap bitmap = ImageDecoder.decodeBitmap(source);
             Log.d(TAG, "Bitmap loaded successfully, size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
@@ -284,7 +287,7 @@ public class MainActivity extends AppCompatActivity {
             if (qrContent != null) {
                 String extractedId = TransactionExtractor.extractTransactionId(qrContent.trim());
                 Log.d(TAG, "Extracted transaction ID: " + extractedId);
-                if (extractedId != null) {
+                if (extractedId != null && TransactionExtractor.isValidTransactionId(extractedId)) {
                     transactionIdEditText.setText(extractedId);
                     verifyTransaction(extractedId);
                 } else {
@@ -298,6 +301,8 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             Log.e(TAG, "Error processing image: " + e.getMessage(), e);
             showFTIdDialog();
+        } finally {
+            showLoading(false);
         }
     }
 
