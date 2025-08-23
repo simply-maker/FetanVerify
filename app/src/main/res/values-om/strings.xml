@@ -87,4 +87,8 @@
     <string name="amharic">Afaan Amaaraa</string>
     <string name="oromo">Afaan Oromoo</string>
     <string name="language">Afaan</string>
+    
+    <!-- Logout -->
+    <string name="logout">Ba'i</string>
+    <string name="logout_confirmation">Dhugaatti ba'uu barbaaddaa?</string>
 </resources>

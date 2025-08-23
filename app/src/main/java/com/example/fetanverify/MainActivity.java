@@ -297,49 +297,40 @@ public class MainActivity extends AppCompatActivity {
 
             // Look for CHE pattern in hex (CHE = 434845)
 
-            String upperHexData = hexData.toUpperCase();
-            
-            // Look for CHE pattern in hex (CHE = 434845)
-            int cheHexIndex = upperHexData.indexOf("434845");
-            if (cheHexIndex != -1) {
-                Log.d(TAG, "extractTransactionFromHex: Found CHE hex pattern at index: " + cheHexIndex);
+            // Convert entire hex to ASCII first
+            String asciiFromHex = hexToAscii(hexData);
+            if (asciiFromHex != null) {
+                Log.d(TAG, "extractTransactionFromHex: Full ASCII from hex: " + asciiFromHex);
                 
-                // Extract exactly 20 hex characters (10 ASCII chars) from CHE position
-                int endIndex = Math.min(cheHexIndex + 20, hexData.length());
-                if (endIndex - cheHexIndex >= 20) {
-                    String cheSection = hexData.substring(cheHexIndex, cheHexIndex + 20);
-                    Log.d(TAG, "extractTransactionFromHex: CHE hex section: " + cheSection);
-                    
-                    String asciiResult = hexToAscii(cheSection);
-                    if (asciiResult != null && asciiResult.length() >= 10) {
-                        String cheId = asciiResult.substring(0, 10);
-                        Log.d(TAG, "extractTransactionFromHex: Extracted CHE ID: " + cheId);
-                        return cheId;
-                    }
+                // Look for CHE pattern in ASCII (priority)
+                java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
+                java.util.regex.Matcher cheMatcher = chePattern.matcher(asciiFromHex);
+                if (cheMatcher.find()) {
+                    String cheId = cheMatcher.group();
+                    Log.d(TAG, "extractTransactionFromHex: Found CHE ID in ASCII: " + cheId);
+                    return cheId;
                 }
-            }
-            
-            // Look for CH pattern in hex (CH = 4348) - only if CHE not found
-            int chHexIndex = upperHexData.indexOf("4348");
-            if (chHexIndex != -1 && !upperHexData.substring(Math.max(0, chHexIndex-2), chHexIndex + 6).contains("434845")) {
-                Log.d(TAG, "extractTransactionFromHex: Found CH hex pattern at index: " + chHexIndex);
                 
-                // Extract exactly 20 hex characters (10 ASCII chars) from CH position
-                int endIndex = Math.min(chHexIndex + 20, hexData.length());
-                if (endIndex - chHexIndex >= 20) {
-                    String chSection = hexData.substring(chHexIndex, chHexIndex + 20);
-                    Log.d(TAG, "extractTransactionFromHex: CH hex section: " + chSection);
-                    
-                    String asciiResult = hexToAscii(chSection);
-                    if (asciiResult != null && asciiResult.length() >= 10) {
-                        String chId = asciiResult.substring(0, 10);
-                        Log.d(TAG, "extractTransactionFromHex: Extracted CH ID: " + chId);
-                        return chId;
-                    }
+                // Look for CH pattern in ASCII (if CHE not found)
+                java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
+                java.util.regex.Matcher chMatcher = chPattern.matcher(asciiFromHex);
+                if (chMatcher.find()) {
+                    String chId = chMatcher.group();
+                    Log.d(TAG, "extractTransactionFromHex: Found CH ID in ASCII: " + chId);
+                    return chId;
+                }
+                
+                // Look for FT pattern in ASCII
+                java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
+                java.util.regex.Matcher ftMatcher = ftPattern.matcher(asciiFromHex);
+                if (ftMatcher.find()) {
+                    String ftId = ftMatcher.group();
+                    Log.d(TAG, "extractTransactionFromHex: Found FT ID in ASCII: " + ftId);
+                    return ftId;
                 }
             }
 
-            Log.d(TAG, "extractTransactionFromHex: No valid CH/CHE pattern found in hex data");
+            Log.d(TAG, "extractTransactionFromHex: No transaction ID patterns found in hex data");
             return null;
         } catch (Exception e) {
             Log.e(TAG, "extractTransactionFromHex: Error extracting from hex: " + e.getMessage());
@@ -427,23 +418,58 @@ public class MainActivity extends AppCompatActivity {
         String cleanText = smsText.toUpperCase().replaceAll("\\s+", " ");
         Log.d(TAG, "extractFTFromSMS: Searching for FT ID in text: " + cleanText);
 
-        // Look for FT ID first (priority)
+        // Look for both FT and CH patterns
         java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
         java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
+        
+        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
+        java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
+        
+        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
+        java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
+        
+        boolean hasFT = ftMatcher.find();
+        boolean hasCHE = cheMatcher.find();
+        boolean hasCH = chMatcher.find();
+        
+        Log.d(TAG, "extractFTFromSMS: Found patterns - FT: " + hasFT + ", CHE: " + hasCHE + ", CH: " + hasCH);
+        
+        // Reset matchers for actual extraction
+        ftMatcher.reset();
+        cheMatcher.reset();
+        chMatcher.reset();
+        
+        // Priority logic: If both CH and FT found → take FT
+        if (hasFT && (hasCHE || hasCH)) {
+            if (ftMatcher.find()) {
+                String ftId = ftMatcher.group();
+                Log.d(TAG, "extractFTFromSMS: Both FT and CH found, taking FT: " + ftId);
+                return ftId;
+            }
+        }
+        
+        // If only FT found → take FT
         if (ftMatcher.find()) {
             String ftId = ftMatcher.group();
-            Log.d(TAG, "extractFTFromSMS: Found FT ID: " + ftId);
+            Log.d(TAG, "extractFTFromSMS: Only FT found: " + ftId);
             return ftId;
         }
 
-        // If no FT ID found, look for CH ID (exactly 10 characters)
-        String chId = extractCHFromText(cleanText);
-        if (chId != null) {
-            Log.d(TAG, "extractFTFromSMS: Found CH ID in SMS: " + chId);
+        // If only CHE found → take CHE
+        if (cheMatcher.find()) {
+            String cheId = cheMatcher.group();
+            Log.d(TAG, "extractFTFromSMS: Only CHE found: " + cheId);
+            return cheId;
+        }
+        
+        // If only CH found → take CH
+        if (chMatcher.find()) {
+            String chId = chMatcher.group();
+            Log.d(TAG, "extractFTFromSMS: Only CH found: " + chId);
             return chId;
         }
 
-        Log.d(TAG, "extractFTFromSMS: No FT ID found in SMS text");
+        Log.d(TAG, "extractFTFromSMS: No transaction IDs found in SMS text");
         return null;
     }
 
@@ -488,6 +514,25 @@ public class MainActivity extends AppCompatActivity {
             intent.putParcelableArrayListExtra("historyList", historyList);
             startActivity(intent);
         });
+        
+        // Add logout functionality if logout button exists
+        MaterialButton logoutButton = findViewById(R.id.logoutButton);
+        if (logoutButton != null) {
+            logoutButton.setOnClickListener(v -> {
+                // Clear login state
+                SharedPreferences prefs = getSharedPreferences("RememberPrefs", MODE_PRIVATE);
+                prefs.edit().putBoolean("stay_logged_in", false).apply();
+                
+                // Sign out from Firebase
+                mAuth.signOut();
+                
+                // Go to login screen
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
     }
 
     private void showLanguageMenu() {

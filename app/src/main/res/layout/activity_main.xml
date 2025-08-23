@@ -48,18 +48,28 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/app_title"
+                            android:text="FetanVerify"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            android:textColor="@color/primary_green" />
+                            android:textColor="@color/primary_green"
+                            android:fontFamily="sans-serif-medium" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/app_subtitle"
+                            android:text="Secure Transaction Verification"
                             android:textSize="14sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="4dp" />
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="by TechSolutions Ethiopia"
+                            android:textSize="10sp"
+                            android:textColor="@color/text_hint"
+                            android:textStyle="italic"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -75,6 +85,20 @@
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             app:strokeColor="@color/primary_green"
                             android:textColor="@color/primary_green"
+                            app:cornerRadius="24dp"
+                            android:textSize="16sp"
+                            android:layout_marginEnd="8dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+                        
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/logoutButton"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:text="🚪"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:strokeColor="@color/error_red"
+                            android:textColor="@color/error_red"
                             app:cornerRadius="24dp"
                             android:textSize="16sp"
                             android:layout_marginEnd="8dp"

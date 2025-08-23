@@ -86,4 +86,8 @@
     <string name="amharic">አማርኛ</string>
     <string name="oromo">Afaan Oromoo</string>
     <string name="language">Language</string>
+    
+    <!-- Logout -->
+    <string name="logout">Logout</string>
+    <string name="logout_confirmation">Are you sure you want to logout?</string>
 </resources>

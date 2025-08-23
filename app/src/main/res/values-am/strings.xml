@@ -87,4 +87,8 @@
     <string name="amharic">አማርኛ</string>
     <string name="oromo">አፋን ኦሮሞ</string>
     <string name="language">ቋንቋ</string>
+    
+    <!-- Logout -->
+    <string name="logout">ውጣ</string>
+    <string name="logout_confirmation">በእርግጥ መውጣት ይፈልጋሉ?</string>
 </resources>
