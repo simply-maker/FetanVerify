@@ -607,6 +607,12 @@ public class TransactionExtractor {
             String upperHex = hexData.toUpperCase();
             Log.d(TAG, "Processing enhanced hex data: " + upperHex.substring(0, Math.min(100, upperHex.length())) + "...");
             
+            // First try the new hex-encoded ASCII extraction
+            String hexEncodedResult = extractFromHexEncodedAscii(upperHex);
+            if (hexEncodedResult != null) {
+                return hexEncodedResult;
+            }
+            
             // First try the standard hex processing
             String result = extractFromHex(upperHex);
             if (result != null) {
@@ -643,6 +649,13 @@ public class TransactionExtractor {
         try {
             String upperHex = hexData.toUpperCase();
             Log.d(TAG, "Processing hex data: " + upperHex.substring(0, Math.min(100, upperHex.length())) + "...");
+            
+            // First, try the new hex-encoded ASCII extraction
+            String hexEncodedResult = extractFromHexEncodedAscii(upperHex);
+            if (hexEncodedResult != null) {
+                Log.d(TAG, "Found transaction ID in hex-encoded ASCII: " + hexEncodedResult);
+                return hexEncodedResult;
+            }
             
             // First, try to find transaction IDs directly in the hex string
             // Look for hex patterns that could represent ASCII transaction IDs
@@ -720,6 +733,120 @@ public class TransactionExtractor {
             return output.toString();
         } catch (Exception e) {
             Log.e(TAG, "Error converting hex to ASCII: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Enhanced hex to ASCII conversion that looks for transaction IDs in hex-encoded ASCII
+     */
+    private static String extractFromHexEncodedAscii(String hexData) {
+        try {
+            Log.d(TAG, "=== HEX-ENCODED ASCII EXTRACTION ===");
+            Log.d(TAG, "Input hex data: " + hexData.substring(0, Math.min(100, hexData.length())) + "...");
+            
+            // Look for common transaction ID patterns in hex format
+            // CHE271T15E would be encoded as: 434845323731543135456304A62C (partial)
+            // Let's look for the hex patterns of common prefixes
+            
+            // FT in hex = 4654
+            // CH in hex = 4348  
+            // CHA in hex = 434841
+            // CHE in hex = 434845
+            
+            String upperHex = hexData.toUpperCase();
+            
+            // Look for CHE pattern (434845)
+            int cheIndex = upperHex.indexOf("434845");
+            if (cheIndex != -1) {
+                Log.d(TAG, "Found CHE pattern at index: " + cheIndex);
+                // Extract the next several hex pairs to get the full transaction ID
+                String cheHexPart = upperHex.substring(cheIndex, Math.min(cheIndex + 24, upperHex.length())); // 12 hex pairs = 24 chars
+                String cheAscii = hexToAscii(cheHexPart);
+                Log.d(TAG, "CHE hex part: " + cheHexPart + " -> ASCII: " + cheAscii);
+                
+                if (cheAscii != null) {
+                    // Look for a valid CHE transaction ID in the ASCII
+                    Pattern chePattern = Pattern.compile("CHE[A-Z0-9]{5,9}", Pattern.CASE_INSENSITIVE);
+                    Matcher cheMatcher = chePattern.matcher(cheAscii);
+                    if (cheMatcher.find()) {
+                        String cheId = cheMatcher.group().toUpperCase();
+                        Log.d(TAG, "Found CHE transaction ID: " + cheId);
+                        if (isValidTransactionId(cheId)) {
+                            return cheId;
+                        }
+                    }
+                }
+            }
+            
+            // Look for CHA pattern (434841)
+            int chaIndex = upperHex.indexOf("434841");
+            if (chaIndex != -1) {
+                Log.d(TAG, "Found CHA pattern at index: " + chaIndex);
+                String chaHexPart = upperHex.substring(chaIndex, Math.min(chaIndex + 24, upperHex.length()));
+                String chaAscii = hexToAscii(chaHexPart);
+                Log.d(TAG, "CHA hex part: " + chaHexPart + " -> ASCII: " + chaAscii);
+                
+                if (chaAscii != null) {
+                    Pattern chaPattern = Pattern.compile("CHA[A-Z0-9]{5,9}", Pattern.CASE_INSENSITIVE);
+                    Matcher chaMatcher = chaPattern.matcher(chaAscii);
+                    if (chaMatcher.find()) {
+                        String chaId = chaMatcher.group().toUpperCase();
+                        Log.d(TAG, "Found CHA transaction ID: " + chaId);
+                        if (isValidTransactionId(chaId)) {
+                            return chaId;
+                        }
+                    }
+                }
+            }
+            
+            // Look for CH pattern (4348)
+            int chIndex = upperHex.indexOf("4348");
+            if (chIndex != -1) {
+                Log.d(TAG, "Found CH pattern at index: " + chIndex);
+                String chHexPart = upperHex.substring(chIndex, Math.min(chIndex + 20, upperHex.length()));
+                String chAscii = hexToAscii(chHexPart);
+                Log.d(TAG, "CH hex part: " + chHexPart + " -> ASCII: " + chAscii);
+                
+                if (chAscii != null) {
+                    Pattern chPattern = Pattern.compile("CH[A-Z0-9]{6,10}", Pattern.CASE_INSENSITIVE);
+                    Matcher chMatcher = chPattern.matcher(chAscii);
+                    if (chMatcher.find()) {
+                        String chId = chMatcher.group().toUpperCase();
+                        Log.d(TAG, "Found CH transaction ID: " + chId);
+                        if (isValidTransactionId(chId)) {
+                            return chId;
+                        }
+                    }
+                }
+            }
+            
+            // Look for FT pattern (4654)
+            int ftIndex = upperHex.indexOf("4654");
+            if (ftIndex != -1) {
+                Log.d(TAG, "Found FT pattern at index: " + ftIndex);
+                String ftHexPart = upperHex.substring(ftIndex, Math.min(ftIndex + 24, upperHex.length()));
+                String ftAscii = hexToAscii(ftHexPart);
+                Log.d(TAG, "FT hex part: " + ftHexPart + " -> ASCII: " + ftAscii);
+                
+                if (ftAscii != null) {
+                    Pattern ftPattern = Pattern.compile("FT[A-Z0-9]{8,12}", Pattern.CASE_INSENSITIVE);
+                    Matcher ftMatcher = ftPattern.matcher(ftAscii);
+                    if (ftMatcher.find()) {
+                        String ftId = ftMatcher.group().toUpperCase();
+                        Log.d(TAG, "Found FT transaction ID: " + ftId);
+                        if (isValidTransactionId(ftId)) {
+                            return ftId;
+                        }
+                    }
+                }
+            }
+            
+            Log.d(TAG, "No transaction IDs found in hex-encoded ASCII extraction");
+            return null;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error extracting from hex-encoded ASCII: " + e.getMessage());
             return null;
         }
     }
