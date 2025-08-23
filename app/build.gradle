@@ -41,5 +41,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1' // For JSON serialization
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.mlkit:text-recognition:16.0.0'
+    implementation libs.androidx.camera.lifecycle
+    implementation libs.androidx.camera.view
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.2'
 }
