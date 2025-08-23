@@ -295,14 +295,21 @@ public class MainActivity extends AppCompatActivity {
         try {
             Log.d(TAG, "extractTransactionFromHex: Processing hex data: " + hexData);
 
-            // Look for CHE pattern in hex (CHE = 434845)
-
             // Convert entire hex to ASCII first
             String asciiFromHex = hexToAscii(hexData);
             if (asciiFromHex != null) {
                 Log.d(TAG, "extractTransactionFromHex: Full ASCII from hex: " + asciiFromHex);
                 
-                // Look for CHE pattern in ASCII (priority)
+                // Look for CHA pattern in ASCII (priority - most specific)
+                java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Z0-9]{6}");
+                java.util.regex.Matcher chaMatcher = chaPattern.matcher(asciiFromHex);
+                if (chaMatcher.find()) {
+                    String chaId = chaMatcher.group();
+                    Log.d(TAG, "extractTransactionFromHex: Found CHA ID in ASCII: " + chaId);
+                    return chaId;
+                }
+                
+                // Look for CHE pattern in ASCII (second priority)
                 java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
                 java.util.regex.Matcher cheMatcher = chePattern.matcher(asciiFromHex);
                 if (cheMatcher.find()) {
@@ -311,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
                     return cheId;
                 }
                 
-                // Look for CH pattern in ASCII (if CHE not found)
+                // Look for CH pattern in ASCII (third priority)
                 java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
                 java.util.regex.Matcher chMatcher = chPattern.matcher(asciiFromHex);
                 if (chMatcher.find()) {
@@ -320,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
                     return chId;
                 }
                 
-                // Look for FT pattern in ASCII
+                // Look for FT pattern in ASCII (last priority)
                 java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
                 java.util.regex.Matcher ftMatcher = ftPattern.matcher(asciiFromHex);
                 if (ftMatcher.find()) {
@@ -329,6 +336,7 @@ public class MainActivity extends AppCompatActivity {
                     return ftId;
                 }
             }
+
 
             Log.d(TAG, "extractTransactionFromHex: No transaction ID patterns found in hex data");
             return null;
@@ -368,7 +376,16 @@ public class MainActivity extends AppCompatActivity {
         String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
         Log.d(TAG, "extractCHFromText: Searching for CH ID in text: " + cleanText);
 
-        // Look for CHE followed by exactly 7 alphanumeric characters (total 10 characters) - priority
+        // Look for CHA followed by exactly 6 alphanumeric characters (total 9 characters) - highest priority
+        java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Z0-9]{6}");
+        java.util.regex.Matcher chaMatcher = chaPattern.matcher(cleanText);
+        if (chaMatcher.find()) {
+            String chaId = chaMatcher.group();
+            Log.d(TAG, "extractCHFromText: Found CHA ID: " + chaId);
+            return chaId;
+        }
+
+        // Look for CHE followed by exactly 7 alphanumeric characters (total 10 characters) - second priority
         java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
         java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
         if (cheMatcher.find()) {
@@ -377,7 +394,7 @@ public class MainActivity extends AppCompatActivity {
             return cheId;
         }
 
-        // Look for CH followed by exactly 8 alphanumeric characters (total 10 characters)
+        // Look for CH followed by exactly 8 alphanumeric characters (total 10 characters) - third priority
         java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
         java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
         if (chMatcher.find()) {
@@ -418,9 +435,12 @@ public class MainActivity extends AppCompatActivity {
         String cleanText = smsText.toUpperCase().replaceAll("\\s+", " ");
         Log.d(TAG, "extractFTFromSMS: Searching for FT ID in text: " + cleanText);
 
-        // Look for both FT and CH patterns
+        // Look for FT, CHA, CHE, and CH patterns
         java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
         java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
+        
+        java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Z0-9]{6}");
+        java.util.regex.Matcher chaMatcher = chaPattern.matcher(cleanText);
         
         java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
         java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
@@ -429,21 +449,23 @@ public class MainActivity extends AppCompatActivity {
         java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
         
         boolean hasFT = ftMatcher.find();
+        boolean hasCHA = chaMatcher.find();
         boolean hasCHE = cheMatcher.find();
         boolean hasCH = chMatcher.find();
         
-        Log.d(TAG, "extractFTFromSMS: Found patterns - FT: " + hasFT + ", CHE: " + hasCHE + ", CH: " + hasCH);
+        Log.d(TAG, "extractFTFromSMS: Found patterns - FT: " + hasFT + ", CHA: " + hasCHA + ", CHE: " + hasCHE + ", CH: " + hasCH);
         
         // Reset matchers for actual extraction
         ftMatcher.reset();
+        chaMatcher.reset();
         cheMatcher.reset();
         chMatcher.reset();
         
-        // Priority logic: If both CH and FT found → take FT
-        if (hasFT && (hasCHE || hasCH)) {
+        // Priority logic: If both CH/CHA/CHE and FT found → take FT
+        if (hasFT && (hasCHA || hasCHE || hasCH)) {
             if (ftMatcher.find()) {
                 String ftId = ftMatcher.group();
-                Log.d(TAG, "extractFTFromSMS: Both FT and CH found, taking FT: " + ftId);
+                Log.d(TAG, "extractFTFromSMS: Both FT and CH/CHA/CHE found, taking FT: " + ftId);
                 return ftId;
             }
         }
@@ -455,6 +477,12 @@ public class MainActivity extends AppCompatActivity {
             return ftId;
         }
 
+        // If only CHA found → take CHA (highest priority among CH variants)
+        if (chaMatcher.find()) {
+            String chaId = chaMatcher.group();
+            Log.d(TAG, "extractFTFromSMS: Only CHA found: " + chaId);
+            return chaId;
+        }
         // If only CHE found → take CHE
         if (cheMatcher.find()) {
             String cheId = cheMatcher.group();
@@ -708,7 +736,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String upperCaseId = transactionId.toUpperCase();
-        return upperCaseId.startsWith("CHE") || upperCaseId.startsWith("CH");
+        return upperCaseId.startsWith("CHA") || upperCaseId.startsWith("CHE") || upperCaseId.startsWith("CH");
     }
 
     private void showFTIdDialog() {

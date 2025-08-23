@@ -89,6 +89,6 @@
     <string name="language">Afaan</string>
     
     <!-- Logout -->
-    <string name="logout">Ba'i</string>
-    <string name="logout_confirmation">Dhugaatti ba'uu barbaaddaa?</string>
+    <string name="logout">Ba\'i</string>
+    <string name="logout_confirmation">Dhugaatti ba\'uu barbaaddaa?</string>
 </resources>

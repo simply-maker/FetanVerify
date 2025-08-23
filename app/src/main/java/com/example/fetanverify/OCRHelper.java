@@ -11,6 +11,7 @@ public class OCRHelper {
     
     // Regex patterns for different transaction ID formats
     private static final Pattern FT_PATTERN = Pattern.compile("FT[A-Z0-9]{10,12}");
+    private static final Pattern CHA_PATTERN = Pattern.compile("CHA[A-Z0-9]{6}");
     private static final Pattern CH_PATTERN = Pattern.compile("CH[A-Z0-9]{8,12}");
     private static final Pattern CHE_PATTERN = Pattern.compile("CHE[A-Z0-9]{5,10}");
     
@@ -50,7 +51,15 @@ public class OCRHelper {
         String cleanText = text.toUpperCase().replaceAll("\\s+", " ");
         Log.d(TAG, "extractCHFromText: Searching for CH ID in text: " + cleanText);
         
-        // Try CHE pattern first (more specific)
+        // Try CHA pattern first (most specific)
+        Matcher chaMatcher = CHA_PATTERN.matcher(cleanText);
+        if (chaMatcher.find()) {
+            String chaId = chaMatcher.group();
+            Log.d(TAG, "extractCHFromText: Found CHA ID: " + chaId);
+            return chaId;
+        }
+        
+        // Try CHE pattern second (more specific than CH)
         Matcher cheMatcher = CHE_PATTERN.matcher(cleanText);
         if (cheMatcher.find()) {
             String cheId = cheMatcher.group();
@@ -101,6 +110,30 @@ public class OCRHelper {
     private static String extractTransactionFromHex(String hexData) {
         try {
             Log.d(TAG, "extractTransactionFromHex: Processing hex data: " + hexData);
+            
+            // Look for CHA pattern in hex (CHA = 434841)
+            Pattern chaHexPattern = Pattern.compile("434841([0-9A-F]+)");
+            Matcher chaMatcher = chaHexPattern.matcher(hexData.toUpperCase());
+            
+            if (chaMatcher.find()) {
+                String chaHexMatch = chaMatcher.group();
+                Log.d(TAG, "extractTransactionFromHex: Found CHA hex pattern: " + chaHexMatch);
+                
+                // Convert the hex to ASCII
+                String asciiResult = hexToAscii(chaHexMatch);
+                if (asciiResult != null && asciiResult.startsWith("CHA")) {
+                    // Extract reasonable length CHA ID
+                    if (asciiResult.length() <= 15) {
+                        Log.d(TAG, "extractTransactionFromHex: Extracted CHA ID from hex: " + asciiResult);
+                        return asciiResult;
+                    } else {
+                        // Truncate to reasonable length
+                        String truncated = asciiResult.substring(0, Math.min(15, asciiResult.length()));
+                        Log.d(TAG, "extractTransactionFromHex: Truncated CHA ID: " + truncated);
+                        return truncated;
+                    }
+                }
+            }
             
             // Look for CHE pattern in hex (CHE = 434845)
             Pattern cheHexPattern = Pattern.compile("434845([0-9A-F]+)");
@@ -155,9 +188,20 @@ public class OCRHelper {
             if (asciiFromHex != null) {
                 Log.d(TAG, "extractTransactionFromHex: Full ASCII from hex: " + asciiFromHex);
                 
+                // Look for CHA pattern in ASCII (highest priority)
+                String chaId = extractCHFromText(asciiFromHex);
+                if (chaId != null && chaId.startsWith("CHA")) {
+                    return chaId;
+                }
+                
                 // Look for CHE pattern in ASCII
                 String cheId = extractCHFromText(asciiFromHex);
-                if (cheId != null) {
+                if (cheId != null && cheId.startsWith("CHE")) {
+                    return cheId;
+                }
+                
+                // Look for general CH pattern in ASCII
+                if (cheId != null && cheId.startsWith("CH")) {
                     return cheId;
                 }
                 
