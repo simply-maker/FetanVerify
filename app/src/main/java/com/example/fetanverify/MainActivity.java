@@ -3,6 +3,7 @@ package com.example.fetanverify;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -170,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Raw SMS scan result: " + scannedText);
                         if (scannedText != null) {
                             try {
-                                String extractedId = extractFTFromSMS(scannedText);
+                                String extractedId = OCRHelper.extractFTFromSMS(scannedText);
                                 Log.d(TAG, "Extracted FT ID from SMS: " + extractedId);
                                 if (extractedId != null) {
                                     transactionIdEditText.setText(extractedId);
@@ -200,304 +201,33 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
 
-        Log.d(TAG, "extractTransactionId: Processing raw data: " + rawData);
+        Log.d(TAG, "extractTransactionId: Processing raw data: " + rawData.substring(0, Math.min(50, rawData.length())) + "...");
 
-        // Check if it's Base64 encoded
-        if (isBase64(rawData)) {
+        if (OCRHelper.isBase64(rawData)) {
             Log.d(TAG, "extractTransactionId: Detected Base64 encoded data");
-            String decoded = decodeBase64QR(rawData);
+            String decoded = OCRHelper.decodeBase64QR(rawData);
             if (decoded != null) {
                 Log.d(TAG, "extractTransactionId: Successfully decoded Base64 to: " + decoded);
                 return decoded;
             } else {
-                Log.d(TAG, "extractTransactionId: Base64 decoding failed, treating as regular text");
+                Log.d(TAG, "extractTransactionId: Base64 decoding failed");
+                return null;
             }
         }
 
-        // Try to extract FT ID
-        String ftId = extractFTFromText(rawData);
+        String ftId = OCRHelper.extractFTFromSMS(rawData);
         if (ftId != null) {
             Log.d(TAG, "extractTransactionId: Found FT ID: " + ftId);
             return ftId;
         }
 
-        // Try to extract CH ID (10 characters exactly)
-        String chId = extractCHFromText(rawData);
+        String chId = OCRHelper.extractCHFromText(rawData);
         if (chId != null) {
             Log.d(TAG, "extractTransactionId: Found CH ID: " + chId);
             return chId;
         }
 
-        // Return original text if no patterns match
-        Log.d(TAG, "extractTransactionId: No patterns matched, returning original text: " + rawData.trim());
-        return rawData.trim();
-    }
-
-    private boolean isBase64(String str) {
-        if (str == null || str.isEmpty()) {
-            return false;
-        }
-
-        // Remove whitespace
-        str = str.replaceAll("\\s+", "");
-
-        // Check if it's a valid Base64 string
-        try {
-            android.util.Base64.decode(str, android.util.Base64.DEFAULT);
-            boolean isBase64 = str.length() > 20 && str.matches("^[A-Za-z0-9+/]*={0,2}$");
-            Log.d(TAG, "isBase64: String '" + str.substring(0, Math.min(20, str.length())) + "...' is Base64: " + isBase64);
-            return isBase64;
-        } catch (Exception e) {
-            Log.d(TAG, "isBase64: String is not valid Base64: " + e.getMessage());
-            return false;
-        }
-    }
-
-    private String decodeBase64QR(String base64Data) {
-        try {
-            if (base64Data == null || base64Data.isEmpty()) {
-                Log.d(TAG, "decodeBase64QR: Input is null or empty");
-                return null;
-            }
-
-            // Remove any whitespace
-            base64Data = base64Data.replaceAll("\\s+", "");
-            Log.d(TAG, "decodeBase64QR: Decoding Base64: " + base64Data);
-
-            // Decode Base64
-            byte[] decodedBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT);
-
-            // Convert to hex string for analysis
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : decodedBytes) {
-                hexString.append(String.format("%02X", b & 0xFF));
-            }
-            String hexData = hexString.toString();
-            Log.d(TAG, "decodeBase64QR: Decoded to hex: " + hexData);
-
-            // Try to extract transaction ID from hex data
-            String transactionId = extractTransactionFromHex(hexData);
-            if (transactionId != null) {
-                Log.d(TAG, "decodeBase64QR: Successfully extracted transaction ID: " + transactionId);
-                return transactionId;
-            }
-
-            Log.d(TAG, "decodeBase64QR: No transaction ID found in hex data");
-            return null;
-
-        } catch (Exception e) {
-            Log.e(TAG, "decodeBase64QR: Error decoding Base64: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private String extractTransactionFromHex(String hexData) {
-        try {
-            Log.d(TAG, "extractTransactionFromHex: Processing hex data: " + hexData);
-
-            // Convert entire hex to ASCII first
-            String asciiFromHex = hexToAscii(hexData);
-            if (asciiFromHex != null) {
-                Log.d(TAG, "extractTransactionFromHex: Full ASCII from hex: " + asciiFromHex);
-                
-                // Look for CHA pattern in ASCII (priority - most specific)
-                java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Z0-9]{6}");
-                java.util.regex.Matcher chaMatcher = chaPattern.matcher(asciiFromHex);
-                if (chaMatcher.find()) {
-                    String chaId = chaMatcher.group();
-                    Log.d(TAG, "extractTransactionFromHex: Found CHA ID in ASCII: " + chaId);
-                    return chaId;
-                }
-                
-                // Look for CHE pattern in ASCII (second priority)
-                java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Z0-9]{7}");
-                java.util.regex.Matcher cheMatcher = chePattern.matcher(asciiFromHex);
-                if (cheMatcher.find()) {
-                    String cheId = cheMatcher.group();
-                    Log.d(TAG, "extractTransactionFromHex: Found CHE ID in ASCII: " + cheId);
-                    return cheId;
-                }
-                
-                // Look for CH pattern in ASCII (third priority)
-                java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Z0-9]{8}");
-                java.util.regex.Matcher chMatcher = chPattern.matcher(asciiFromHex);
-                if (chMatcher.find()) {
-                    String chId = chMatcher.group();
-                    Log.d(TAG, "extractTransactionFromHex: Found CH ID in ASCII: " + chId);
-                    return chId;
-                }
-                
-                // Look for FT pattern in ASCII (last priority)
-                java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Z0-9]{10,12}");
-                java.util.regex.Matcher ftMatcher = ftPattern.matcher(asciiFromHex);
-                if (ftMatcher.find()) {
-                    String ftId = ftMatcher.group();
-                    Log.d(TAG, "extractTransactionFromHex: Found FT ID in ASCII: " + ftId);
-                    return ftId;
-                }
-            }
-
-
-            Log.d(TAG, "extractTransactionFromHex: No transaction ID patterns found in hex data");
-            return null;
-        } catch (Exception e) {
-            Log.e(TAG, "extractTransactionFromHex: Error extracting from hex: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private String hexToAscii(String hexStr) {
-        try {
-            Log.d(TAG, "hexToAscii: Converting hex: " + hexStr);
-            StringBuilder output = new StringBuilder();
-            for (int i = 0; i < hexStr.length(); i += 2) {
-                if (i + 1 < hexStr.length()) {
-                    String str = hexStr.substring(i, i + 2);
-                    int decimal = Integer.parseInt(str, 16);
-                    if (decimal >= 32 && decimal <= 126) { // Printable ASCII range
-                        output.append((char) decimal);
-                    }
-                }
-            }
-            String result = output.toString();
-            Log.d(TAG, "hexToAscii: Result: " + result);
-            return result;
-        } catch (Exception e) {
-            Log.e(TAG, "hexToAscii: Error converting hex to ASCII: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private String extractCHFromText(String text) {
-        if (text == null || text.isEmpty()) {
-            return null;
-        }
-
-        String cleanText = text.replaceAll("\\s+", " ");
-        Log.d(TAG, "extractCHFromText: Searching for CH ID in text: " + cleanText);
-
-        // Look for CHA followed by exactly 6 alphanumeric characters (total 9 characters) - highest priority
-        java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Za-z0-9]{6}", java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher chaMatcher = chaPattern.matcher(cleanText);
-        if (chaMatcher.find()) {
-            String chaId = chaMatcher.group();
-            Log.d(TAG, "extractCHFromText: Found CHA ID: " + chaId);
-            return chaId;
-        }
-
-        // Look for CHE followed by exactly 7 alphanumeric characters (total 10 characters) - second priority
-        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Za-z0-9]{7}", java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
-        if (cheMatcher.find()) {
-            String cheId = cheMatcher.group();
-            Log.d(TAG, "extractCHFromText: Found CHE ID: " + cheId);
-            return cheId;
-        }
-
-        // Look for CH followed by exactly 8 alphanumeric characters (total 10 characters) - third priority
-        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Za-z0-9]{8}", java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
-        if (chMatcher.find()) {
-            String chId = chMatcher.group();
-            Log.d(TAG, "extractCHFromText: Found CH ID: " + chId);
-            return chId;
-        }
-
-        return null;
-    }
-
-    private String extractFTFromText(String text) {
-        if (text == null || text.isEmpty()) {
-            return null;
-        }
-
-        String cleanText = text.replaceAll("\\s+", " ");
-        Log.d(TAG, "extractFTFromText: Searching for FT ID in text: " + cleanText);
-
-        java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Za-z0-9]{10,12}", java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
-        if (ftMatcher.find()) {
-            String ftId = ftMatcher.group();
-            Log.d(TAG, "extractFTFromText: Found FT ID: " + ftId);
-            return ftId;
-        }
-
-        return null;
-    }
-
-    private String extractFTFromSMS(String smsText) {
-        if (smsText == null || smsText.isEmpty()) {
-            Log.d(TAG, "extractFTFromSMS: Input text is null or empty");
-            return null;
-        }
-
-        // Clean the text and convert to uppercase for better matching
-        String cleanText = smsText.replaceAll("\\s+", " ");
-        Log.d(TAG, "extractFTFromSMS: Searching for FT ID in text: " + cleanText);
-
-        // Look for FT, CHA, CHE, and CH patterns
-        java.util.regex.Pattern ftPattern = java.util.regex.Pattern.compile("FT[A-Za-z0-9]{10,12}", java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher ftMatcher = ftPattern.matcher(cleanText);
-        
-        java.util.regex.Pattern chaPattern = java.util.regex.Pattern.compile("CHA[A-Za-z0-9]{6}", java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher chaMatcher = chaPattern.matcher(cleanText);
-        
-        java.util.regex.Pattern chePattern = java.util.regex.Pattern.compile("CHE[A-Za-z0-9]{7}", java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher cheMatcher = chePattern.matcher(cleanText);
-        
-        java.util.regex.Pattern chPattern = java.util.regex.Pattern.compile("CH[A-Za-z0-9]{8}", java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher chMatcher = chPattern.matcher(cleanText);
-        
-        boolean hasFT = ftMatcher.find();
-        boolean hasCHA = chaMatcher.find();
-        boolean hasCHE = cheMatcher.find();
-        boolean hasCH = chMatcher.find();
-        
-        Log.d(TAG, "extractFTFromSMS: Found patterns - FT: " + hasFT + ", CHA: " + hasCHA + ", CHE: " + hasCHE + ", CH: " + hasCH);
-        
-        // Reset matchers for actual extraction
-        ftMatcher.reset();
-        chaMatcher.reset();
-        cheMatcher.reset();
-        chMatcher.reset();
-        
-        // Priority logic: If both CH/CHA/CHE and FT found → take FT
-        if (hasFT && (hasCHA || hasCHE || hasCH)) {
-            if (ftMatcher.find()) {
-                String ftId = ftMatcher.group();
-                Log.d(TAG, "extractFTFromSMS: Both FT and CH/CHA/CHE found, taking FT: " + ftId);
-                return ftId;
-            }
-        }
-        
-        // If only FT found → take FT
-        if (ftMatcher.find()) {
-            String ftId = ftMatcher.group();
-            Log.d(TAG, "extractFTFromSMS: Only FT found: " + ftId);
-            return ftId;
-        }
-
-        // If only CHA found → take CHA (highest priority among CH variants)
-        if (chaMatcher.find()) {
-            String chaId = chaMatcher.group();
-            Log.d(TAG, "extractFTFromSMS: Only CHA found: " + chaId);
-            return chaId;
-        }
-        // If only CHE found → take CHE
-        if (cheMatcher.find()) {
-            String cheId = cheMatcher.group();
-            Log.d(TAG, "extractFTFromSMS: Only CHE found: " + cheId);
-            return cheId;
-        }
-        
-        // If only CH found → take CH
-        if (chMatcher.find()) {
-            String chId = chMatcher.group();
-            Log.d(TAG, "extractFTFromSMS: Only CH found: " + chId);
-            return chId;
-        }
-
-        Log.d(TAG, "extractFTFromSMS: No transaction IDs found in SMS text");
+        Log.d(TAG, "extractTransactionId: No patterns matched, returning null");
         return null;
     }
 
@@ -542,19 +272,13 @@ public class MainActivity extends AppCompatActivity {
             intent.putParcelableArrayListExtra("historyList", historyList);
             startActivity(intent);
         });
-        
-        // Add logout functionality if logout button exists
+
         MaterialButton logoutButton = findViewById(R.id.logoutButton);
         if (logoutButton != null) {
             logoutButton.setOnClickListener(v -> {
-                // Clear login state
                 SharedPreferences prefs = getSharedPreferences("RememberPrefs", MODE_PRIVATE);
                 prefs.edit().putBoolean("stay_logged_in", false).apply();
-                
-                // Sign out from Firebase
                 mAuth.signOut();
-                
-                // Go to login screen
                 Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
@@ -566,7 +290,6 @@ public class MainActivity extends AppCompatActivity {
     private void showLanguageMenu() {
         PopupMenu popup = new PopupMenu(this, languageButton);
         popup.getMenuInflater().inflate(R.menu.language_menu, popup.getMenu());
-
         popup.setOnMenuItemClickListener(item -> {
             String languageCode = LanguageHelper.ENGLISH;
             if (item.getItemId() == R.id.language_amharic) {
@@ -574,19 +297,18 @@ public class MainActivity extends AppCompatActivity {
             } else if (item.getItemId() == R.id.language_oromo) {
                 languageCode = LanguageHelper.OROMO;
             }
-
             LanguageHelper.setLanguage(this, languageCode);
-            recreate(); // Restart activity to apply language changes
+            recreate();
             return true;
         });
-
         popup.show();
     }
 
     private void processQRImageFromUri(Uri imageUri) {
         try {
             Log.d(TAG, "Processing QR image from URI: " + imageUri);
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+            ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
+            Bitmap bitmap = ImageDecoder.decodeBitmap(source);
             Log.d(TAG, "Bitmap loaded successfully, size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
             String qrContent = decodeQRCode(bitmap);
             Log.d(TAG, "QR content decoded: " + qrContent);
@@ -599,6 +321,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Log.w(TAG, "No transaction ID found in QR image");
                     Toast.makeText(this, getString(R.string.no_transaction_id_found), Toast.LENGTH_SHORT).show();
+                    showFTIdDialog();
                 }
             } else {
                 Log.w(TAG, "No QR code found in image");
@@ -615,10 +338,8 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Attempting to decode QR code from bitmap");
             int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
             bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-
             RGBLuminanceSource source = new RGBLuminanceSource(bitmap.getWidth(), bitmap.getHeight(), pixels);
             BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
-
             Result result = new MultiFormatReader().decode(binaryBitmap);
             String qrText = result.getText();
             Log.d(TAG, "QR code decoded successfully: " + qrText);
@@ -633,7 +354,6 @@ public class MainActivity extends AppCompatActivity {
         historyList = new ArrayList<>();
         verifiedTransactionIds = new HashSet<>();
         historyPrefs = getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE);
-
         String historyJson = historyPrefs.getString(HISTORY_LIST_KEY, "");
         if (!historyJson.isEmpty()) {
             Gson gson = new Gson();
@@ -643,7 +363,6 @@ public class MainActivity extends AppCompatActivity {
                 historyList.addAll(savedHistory);
             }
         }
-
         String verifiedIdsJson = historyPrefs.getString(VERIFIED_IDS_KEY, "");
         if (!verifiedIdsJson.isEmpty()) {
             Gson gson = new Gson();
@@ -658,13 +377,10 @@ public class MainActivity extends AppCompatActivity {
     private void saveHistoryToPrefs() {
         SharedPreferences.Editor editor = historyPrefs.edit();
         Gson gson = new Gson();
-
         String historyJson = gson.toJson(historyList);
         editor.putString(HISTORY_LIST_KEY, historyJson);
-
         String verifiedIdsJson = gson.toJson(verifiedTransactionIds);
         editor.putString(VERIFIED_IDS_KEY, verifiedIdsJson);
-
         editor.apply();
     }
 
@@ -681,7 +397,6 @@ public class MainActivity extends AppCompatActivity {
         scanButton.setEnabled(!show);
         scanSmsButton.setEnabled(!show);
         importImageButton.setEnabled(!show);
-
         if (show) {
             verifyButton.setText(getString(R.string.verifying));
             resultCard.setVisibility(View.GONE);
@@ -691,30 +406,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void verifyTransaction(String transactionId) {
+        if (TextUtils.isEmpty(transactionId)) {
+            Log.w(TAG, "verifyTransaction: Transaction ID is empty");
+            showLoading(false);
+            Toast.makeText(this, getString(R.string.enter_transaction_id), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Log.d(TAG, "Starting verification for transaction ID: " + transactionId);
         showLoading(true);
 
-        // First try with the original transaction ID
         Query query = databaseReference.orderByChild("transactionId").equalTo(transactionId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.d(TAG, "Database query completed. Data exists: " + dataSnapshot.exists());
+                showLoading(false);
                 if (dataSnapshot.exists()) {
-                    // Found match with original ID
-                    if (isEncodedCHId(transactionId)) {
-                        handleVerificationResult(dataSnapshot, transactionId);
-                    } else {
-                        // If no match found and it looks like a CH ID, show FT dialog
-                        Log.d(TAG, "No match found for transaction ID: " + transactionId);
-                        showFTIdDialog();
-                    }
+                    handleVerificationResult(dataSnapshot, transactionId);
                 } else {
-                    // No match found, handle failure
                     Log.d(TAG, "No match found for transaction ID: " + transactionId);
                     handleVerificationFailure(transactionId);
                 }
-                showLoading(false); // Ensure loading is stopped after processing
             }
 
             @Override
@@ -724,7 +437,6 @@ public class MainActivity extends AppCompatActivity {
                 TextView resultTextView = findViewById(R.id.resultTextView);
                 resultCard.setVisibility(View.VISIBLE);
                 resultTextView.setText(getString(R.string.error) + ": " + databaseError.getMessage());
-
                 VerificationPopup.showErrorPopup(MainActivity.this, getString(R.string.database_error));
             }
         });
@@ -735,7 +447,7 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        return transactionId.matches("(?i)^(CHA.{6}|CHE.{7}|CH.{8})$");
+        return transactionId.matches("(?i)^(CHA.{7}|CHE.{7}|CH.{8})$");
     }
 
     private void showFTIdDialog() {
@@ -743,13 +455,12 @@ public class MainActivity extends AppCompatActivity {
         FTIdDialog.showFTIdDialog(this, new FTIdDialog.FTIdCallback() {
             @Override
             public void onFTIdEntered(String ftId) {
-                transactionIdEditText.setText(ftId);
+                transactionIdEditText.setText(ftId != null ? ftId : "");
                 verifyTransaction(ftId);
             }
 
             @Override
             public void onScanSMS() {
-                // For SMS scanning from dialog, use the same approach
                 Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
                 intent.putExtra("SCAN_ORIENTATION_LOCKED", true);
                 intent.putExtra("PROMPT_MESSAGE", getString(R.string.scan_sms_screenshot));
@@ -770,7 +481,6 @@ public class MainActivity extends AppCompatActivity {
 
         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
             sender = snapshot.child("sender").getValue(String.class);
-            // Handle amount as either String or Double
             Object amountObj = snapshot.child("amount").getValue();
             if (amountObj instanceof String) {
                 amount = (String) amountObj;
@@ -801,9 +511,9 @@ public class MainActivity extends AppCompatActivity {
         resultCard.setVisibility(View.VISIBLE);
         String resultText = getString(R.string.verified) + "\n" +
                 getString(R.string.transaction_id, transactionId) + "\n" +
-                getString(R.string.sender, sender) + "\n" +
+                getString(R.string.sender, sender != null ? sender : "N/A") + "\n" +
                 getString(R.string.amount, amount != null ? amount : "N/A") + "\n" +
-                getString(R.string.timestamp, timestamp);
+                getString(R.string.timestamp, timestamp != null ? timestamp : "N/A");
         resultTextView.setText(resultText);
 
         VerificationPopup.showSuccessPopup(MainActivity.this, transactionId, sender, timestamp, amount);
@@ -814,16 +524,15 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Handling verification failure for: " + transactionId);
         showLoading(false);
 
-        // Check if this looks like an encoded CH ID (10 characters starting with CH)
+        TextView resultTextView = findViewById(R.id.resultTextView);
+        resultCard.setVisibility(View.VISIBLE);
+        String resultText = getString(R.string.failed) + "\n" + getString(R.string.invalid_transaction_id, transactionId != null ? transactionId : "N/A");
+        resultTextView.setText(resultText);
+
         if (isEncodedCHId(transactionId)) {
-            // Show FT ID dialog for encoded CH IDs that failed verification
             showFTIdDialog();
         } else {
-            // Show regular error for other transaction IDs
-            TextView resultTextView = findViewById(R.id.resultTextView);
-            resultCard.setVisibility(View.VISIBLE);
-            resultTextView.setText(getString(R.string.failed) + "\n" + getString(R.string.invalid_transaction_id, transactionId));
-            VerificationPopup.showErrorPopup(MainActivity.this, transactionId);
+            VerificationPopup.showErrorPopup(MainActivity.this, transactionId != null ? transactionId : "N/A");
         }
     }
 }
