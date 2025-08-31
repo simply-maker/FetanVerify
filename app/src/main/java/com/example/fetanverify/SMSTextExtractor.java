@@ -109,9 +109,9 @@ public class SMSTextExtractor {
             // Remove common OCR artifacts and normalize text
             String processed = rawText
                 // Fix common OCR mistakes
-                .replaceAll("[oO0]", "0")  // Replace O with 0 in transaction IDs
-                .replaceAll("[Il1]", "1")  // Replace I, l with 1
-                .replaceAll("[S5]", "5")   // Replace S with 5 in some cases
+                .replaceAll("(?i)[oO](?=[0-9])", "0")  // Replace O with 0 when followed by numbers
+                .replaceAll("(?i)[Il](?=[0-9])", "1")  // Replace I, l with 1 when followed by numbers
+                .replaceAll("(?i)[S](?=[0-9])", "5")   // Replace S with 5 when followed by numbers
                 // Remove extra whitespace and normalize
                 .replaceAll("\\s+", " ")
                 .trim();
@@ -128,6 +128,8 @@ public class SMSTextExtractor {
                     upperLine.contains("TRANSACTION") ||
                     upperLine.contains("REFERENCE") ||
                     upperLine.contains("ID") ||
+                    upperLine.contains("TELEBIRR") ||
+                    upperLine.contains("PAYMENT") ||
                     upperLine.matches(".*[A-Z]{2,3}[0-9A-Z]{6,12}.*")) {
                     relevantText.append(line).append(" ");
                 }

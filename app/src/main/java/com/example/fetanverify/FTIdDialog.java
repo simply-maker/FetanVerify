@@ -54,6 +54,19 @@ public class FTIdDialog {
                 return;
             }
             
+            // Clean the input - remove any non-alphanumeric characters except for the format prefixes
+            ftId = ftId.replaceAll("[^A-Z0-9]", "");
+            
+            // Auto-detect and validate format
+            if (ftId.length() >= 10 && !ftId.startsWith("FT") && !ftId.startsWith("CH")) {
+                // Try to determine format based on length
+                if (ftId.length() == 10) {
+                    ftId = "CH" + ftId;
+                } else if (ftId.length() == 12) {
+                    ftId = "FT" + ftId;
+                }
+            }
+            
             if (!TransactionExtractor.isValidTransactionId(ftId)) {
                 ftIdLayout.setError(context.getString(R.string.invalid_ft_format));
                 return;

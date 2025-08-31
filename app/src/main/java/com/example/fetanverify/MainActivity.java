@@ -437,16 +437,17 @@ public class MainActivity extends AppCompatActivity {
         FTIdDialog.showFTIdDialog(this, new FTIdDialog.FTIdCallback() {
             @Override
             public void onFTIdEntered(String ftId) {
-                transactionIdEditText.setText(ftId != null ? ftId : "");
-                verifyTransaction(ftId);
+                if (ftId != null && !ftId.trim().isEmpty()) {
+                    transactionIdEditText.setText(ftId.trim().toUpperCase());
+                    verifyTransaction(ftId.trim().toUpperCase());
+                } else {
+                    showAlert("Please enter a valid FT ID", "error");
+                }
             }
 
             @Override
             public void onScanSMS() {
-                Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
-                intent.putExtra("SCAN_ORIENTATION_LOCKED", true);
-                intent.putExtra("PROMPT_MESSAGE", getString(R.string.scan_sms_screenshot));
-                intent.putExtra("BEEP_ENABLED", true);
+                Intent intent = new Intent(MainActivity.this, CameraScanActivity.class);
                 smsLauncher.launch(intent);
             }
         });
@@ -511,12 +512,14 @@ public class MainActivity extends AppCompatActivity {
         String resultText = getString(R.string.failed) + "\n" + getString(R.string.invalid_transaction_id, transactionId != null ? transactionId : "N/A");
         resultTextView.setText(resultText);
 
-        // Show FT dialog for any CH format transaction that fails verification
-        if (TransactionExtractor.isCHFormat(transactionId)) {
+        // Show FT dialog for any transaction that fails verification
+        if (transactionId != null && (TransactionExtractor.isCHFormat(transactionId) || TransactionExtractor.isFTFormat(transactionId))) {
             Log.d(TAG, "CH format transaction failed verification, showing FT dialog");
             showFTIdDialog();
         } else {
-            VerificationPopup.showErrorPopup(MainActivity.this, transactionId != null ? transactionId : "N/A");
+            // For unknown format or null transaction ID, also show FT dialog
+            Log.d(TAG, "Unknown format or null transaction, showing FT dialog");
+            showFTIdDialog();
         }
     }
     

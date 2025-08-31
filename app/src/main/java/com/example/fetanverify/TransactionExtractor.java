@@ -204,10 +204,26 @@ public class TransactionExtractor {
             if (asciiData != null && !asciiData.trim().isEmpty()) {
                 Log.d(TAG, "Hex to ASCII: " + asciiData);
                 
-                // Look specifically for CH patterns in ASCII
+                // Enhanced CH extraction from ASCII
                 String result = extractCHFromAscii(asciiData);
                 if (result != null) {
                     return result;
+                }
+                
+                // Try to find CH pattern in the middle of the ASCII string
+                String cleanAscii = asciiData.replaceAll("[^A-Z0-9]", "");
+                Log.d(TAG, "Clean ASCII for CH search: " + cleanAscii);
+                
+                // Look for CH followed by 10 alphanumeric characters
+                for (int i = 0; i <= cleanAscii.length() - 12; i++) {
+                    String candidate = cleanAscii.substring(i, i + 12);
+                    if (candidate.startsWith("CH") && candidate.length() == 12) {
+                        String chId = candidate.substring(0, 12);
+                        if (isValidTransactionId(chId)) {
+                            Log.d(TAG, "Found CH ID in clean ASCII: " + chId);
+                            return chId;
+                        }
+                    }
                 }
                 
                 // Fallback to direct patterns
@@ -229,8 +245,9 @@ public class TransactionExtractor {
         Log.d(TAG, "Input ASCII: " + asciiData);
         
         try {
+            // Enhanced CH pattern matching
             // Look for CH followed by exactly 10 alphanumeric characters
-            Pattern chPattern = Pattern.compile("CH[A-Z0-9]{10}", Pattern.CASE_INSENSITIVE);
+            Pattern chPattern = Pattern.compile("\\bCH[A-Z0-9]{10}\\b", Pattern.CASE_INSENSITIVE);
             Matcher matcher = chPattern.matcher(asciiData);
             
             if (matcher.find()) {
@@ -239,6 +256,20 @@ public class TransactionExtractor {
                 
                 if (isValidTransactionId(candidate)) {
                     Log.d(TAG, "Valid CH transaction ID: " + candidate);
+                    return candidate;
+                }
+            }
+            
+            // If no exact match, try to find CH pattern without word boundaries
+            Pattern relaxedChPattern = Pattern.compile("CH[A-Z0-9]{10}", Pattern.CASE_INSENSITIVE);
+            Matcher relaxedMatcher = relaxedChPattern.matcher(asciiData);
+            
+            while (relaxedMatcher.find()) {
+                String candidate = relaxedMatcher.group().toUpperCase();
+                Log.d(TAG, "Found relaxed CH candidate: " + candidate);
+                
+                if (isValidTransactionId(candidate)) {
+                    Log.d(TAG, "Valid relaxed CH transaction ID: " + candidate);
                     return candidate;
                 }
             }
