@@ -10,13 +10,14 @@
     <string name="verify">Mirkaneessi</string>
     <string name="scan_qr">QR Scan</string>
     <string name="import_qr_image">Suuraa QR Galchi</string>
-    <string name="scan_sms">SMS Scan</string>
     <string name="enter_ft_id">Eenyummaa FT Galchi</string>
     <string name="history">Seenaa</string>
     <string name="verifying">Mirkaneessaa jira...</string>
     <string name="verification_result">Bu\'uura Mirkaneessuu</string>
     <string name="privacy_security">🔒 Dhuunfaa fi Nageenya</string>
     <string name="privacy_message">FetanVerify odeeffannoo daldalaa keessanii eeguuf encryption sadarkaa olaanaa fayyadama. Mirkaneessuun hundi karaa Firebase nagaadhaan hojjetama, kunis odeeffannoon maallaqaa keessanii dhuunfaa fi eegamaa ta\'uu isaa mirkaneessa.</string>
+    <string name="already_verified">Duraan Mirkanaawe</string>
+    <string name="transaction_already_verified">Daldalaan kun duraan mirkanaawe.</string>
     
     <!-- Login Activity -->
     <string name="secure_transaction_verification">Mirkaneessuu Daldalaa Nageenya Qabu</string>
@@ -67,17 +68,13 @@
     <string name="no_qr_found">Suuraa keessatti koodiin QR hin argamne</string>
     <string name="error_processing_image">Suuraa hojjechuu keessatti dogoggora</string>
     <string name="scan_qr_code">Koodii QR Scan</string>
-    <string name="scan_sms_text">Barreeffama SMS Scan</string>
-    <string name="scan_sms_screenshot">Eenyummaa FT baasuuf kaameraa ergaa barreeffama SMS iskiriinii irratti qabadhu</string>
-    <string name="no_ft_found_in_sms">Barreeffama SMS keessatti eenyummaan FT hin argamne</string>
     <string name="scanning_options">Filannoo Scan</string>
     <string name="no_transaction_id_found">Daataa scan godhametti eenyummaan daldalaa hin argamne</string>
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">Mirkaneessuu QR Kufate</string>
-    <string name="qr_failed_message">Mirkaneessuun koodii QR kufate. Maaloo maamilaa eenyummaa FT isaanii SMS Telebirr irraa akka siif kennan gaafadhu ykn barreeffama SMS isaanii scan godhi.</string>
+    <string name="qr_failed_message">Mirkaneessuun koodii QR kufate. Maaloo SMS Telebirr keessatti eenyummaa FT barbaadaatii armaan gaditti galchi.</string>
     <string name="enter_ft_manually">Eenyummaa FT Harkaan Galchi</string>
-    <string name="scan_sms_for_ft">Eenyummaa FT\'f SMS Scan</string>
     <string name="ft_id_hint">Eenyummaa FT galchi (fkf., FT1234567890)</string>
     <string name="invalid_ft_format">Bifa eenyummaa FT fashala. Maaloo eenyummaa FT sirrii galchi.</string>
     

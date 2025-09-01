@@ -22,7 +22,6 @@ public class FTIdDialog {
 
     public interface FTIdCallback {
         void onFTIdEntered(String ftId);
-        void onScanSMS();
     }
 
     public static void showFTIdDialog(Context context, FTIdCallback callback) {
@@ -41,11 +40,15 @@ public class FTIdDialog {
         TextInputLayout ftIdLayout = dialog.findViewById(R.id.ftIdLayout);
         TextInputEditText ftIdEditText = dialog.findViewById(R.id.ftIdEditText);
         MaterialButton enterManuallyButton = dialog.findViewById(R.id.enterManuallyButton);
-        MaterialButton scanSmsButton = dialog.findViewById(R.id.scanSmsButton);
         MaterialButton cancelButton = dialog.findViewById(R.id.cancelButton);
 
         titleText.setText(R.string.qr_verification_failed);
-        messageText.setText(R.string.qr_failed_message);
+        messageText.setText("QR code verification failed. Please check your Telebirr SMS for the FT transaction ID and enter it below.");
+        
+        // Set input to always uppercase
+        ftIdEditText.setFilters(new android.text.InputFilter[] {
+            new android.text.InputFilter.AllCaps()
+        });
 
         enterManuallyButton.setOnClickListener(v -> {
             String ftId = ftIdEditText.getText().toString().trim().toUpperCase();
@@ -77,11 +80,6 @@ public class FTIdDialog {
 
             ftIdLayout.setError(null);
             callback.onFTIdEntered(ftId);
-            dialog.dismiss();
-        });
-
-        scanSmsButton.setOnClickListener(v -> {
-            callback.onScanSMS();
             dialog.dismiss();
         });
 

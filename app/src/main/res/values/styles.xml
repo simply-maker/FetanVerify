@@ -9,13 +9,17 @@
         <item name="android:statusBarColor">@color/primary_green</item>
         <item name="android:windowBackground">@color/main_background</item>
         <item name="android:navigationBarColor">@color/primary_green</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
     </style>
 
     <style name="ModernButton" parent="Widget.MaterialComponents.Button">
         <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:paddingTop">16dp</item>
-        <item name="android:paddingBottom">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
         <item name="cornerRadius">12dp</item>
         <item name="android:elevation">6dp</item>
         <item name="android:stateListAnimator">@null</item>
@@ -24,9 +28,10 @@
 
     <style name="ModernCard" parent="Widget.MaterialComponents.CardView">
         <item name="cardCornerRadius">20dp</item>
-        <item name="cardElevation">12dp</item>
+        <item name="cardElevation">8dp</item>
         <item name="cardBackgroundColor">@color/card_background</item>
         <item name="cardUseCompatPadding">true</item>
+        <item name="cardMaxElevation">12dp</item>
     </style>
 
     <style name="ModernTextInput" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
@@ -36,11 +41,13 @@
         <item name="boxCornerRadiusBottomEnd">16dp</item>
         <item name="boxStrokeWidth">2dp</item>
         <item name="boxStrokeWidthFocused">3dp</item>
+        <item name="android:minHeight">56dp</item>
     </style>
     
     <style name="CompactButton" parent="Widget.MaterialComponents.Button">
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">40dp</item>
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
         <item name="cornerRadius">8dp</item>

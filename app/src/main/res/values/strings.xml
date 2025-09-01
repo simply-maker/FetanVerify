@@ -9,13 +9,14 @@
     <string name="verify">Verify</string>
     <string name="scan_qr">Scan QR</string>
     <string name="import_qr_image">Import QR Image</string>
-    <string name="scan_sms">Scan SMS</string>
     <string name="enter_ft_id">Enter FT ID</string>
     <string name="history">History</string>
     <string name="verifying">Verifying...</string>
     <string name="verification_result">Verification Result</string>
     <string name="privacy_security">🔒 Privacy &amp; Security</string>
     <string name="privacy_message">FetanVerify uses advanced encryption to protect your transaction data. All verifications are processed securely through Firebase, ensuring your financial information remains private and protected.</string>
+    <string name="already_verified">Already Verified</string>
+    <string name="transaction_already_verified">This transaction has already been verified previously.</string>
     
     <!-- Login Activity -->
     <string name="secure_transaction_verification">Secure Transaction Verification</string>
@@ -66,17 +67,13 @@
     <string name="no_qr_found">No QR code found in the image</string>
     <string name="error_processing_image">Error processing image</string>
     <string name="scan_qr_code">Scan QR Code</string>
-    <string name="scan_sms_text">Scan SMS Text</string>
-    <string name="scan_sms_screenshot">Point camera at SMS text message on screen to extract FT ID</string>
-    <string name="no_ft_found_in_sms">No FT ID found in SMS text</string>
     <string name="scanning_options">Scanning Options</string>
     <string name="no_transaction_id_found">No transaction ID found in the scanned data</string>
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR Verification Failed</string>
-    <string name="qr_failed_message">The QR code could not be processed or no valid transaction ID was found. Please ask the customer for their FT ID from their Telebirr SMS or scan their SMS text message directly.</string>
+    <string name="qr_failed_message">QR code verification failed. Please check your Telebirr SMS for the FT transaction ID and enter it below.</string>
     <string name="enter_ft_manually">Enter FT ID Manually</string>
-    <string name="scan_sms_for_ft">Scan SMS for FT ID</string>
     <string name="ft_id_hint">Enter FT ID (e.g., FT25223YZCK7)</string>
     <string name="invalid_ft_format">Invalid FT ID format. Please enter a valid FT ID.</string>
     
@@ -98,6 +95,5 @@
     
     <!-- Enhanced error messages -->
     <string name="qr_processing_failed">Failed to process QR code. Please try again or use manual entry.</string>
-    <string name="sms_processing_failed">Failed to extract transaction ID from SMS. Please check the text is clear.</string>
     <string name="invalid_qr_data">QR code contains invalid or unrecognized data format.</string>
 </resources>

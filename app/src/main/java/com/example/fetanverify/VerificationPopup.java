@@ -12,7 +12,7 @@ import com.google.android.material.button.MaterialButton;
 
 public class VerificationPopup {
     
-    public static void showSuccessPopup(Context context, String transactionId, String sender, String timestamp, String amount) {
+    public static void showSuccessPopup(Context context, String transactionId, String sender, String timestamp, String amount, String userEmail) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.popup_verification_result);
@@ -38,11 +38,45 @@ public class VerificationPopup {
         String details = context.getString(R.string.transaction_id, transactionId) + "\n" +
                         context.getString(R.string.sender, sender) + "\n" +
                         context.getString(R.string.amount, amount != null ? amount : "N/A") + "\n" +
-                        context.getString(R.string.timestamp, timestamp);
+                        context.getString(R.string.timestamp, timestamp) + "\n" +
+                        "Verified by: " + (userEmail != null ? userEmail : "N/A");
         transactionDetails.setText(details);
         transactionDetails.setVisibility(android.view.View.VISIBLE);
         
         okButton.setBackgroundColor(Color.parseColor("#1DB584"));
+        okButton.setText(context.getString(R.string.ok));
+        okButton.setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
+    }
+
+    public static void showAlreadyVerifiedPopup(Context context, String transactionId) {
+        Dialog dialog = new Dialog(context);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.popup_verification_result);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        
+        WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+        params.width = WindowManager.LayoutParams.MATCH_PARENT;
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        dialog.getWindow().setAttributes(params);
+        
+        ImageView statusIcon = dialog.findViewById(R.id.statusIcon);
+        TextView statusTitle = dialog.findViewById(R.id.statusTitle);
+        TextView statusMessage = dialog.findViewById(R.id.statusMessage);
+        TextView transactionDetails = dialog.findViewById(R.id.transactionDetails);
+        MaterialButton okButton = dialog.findViewById(R.id.okButton);
+        
+        statusIcon.setImageResource(R.drawable.ic_check_circle);
+        statusIcon.setColorFilter(Color.parseColor("#FF9800")); // Orange color for already verified
+        statusTitle.setText("Already Verified");
+        statusTitle.setTextColor(Color.parseColor("#FF9800"));
+        statusMessage.setText("This transaction has already been verified previously.");
+        
+        transactionDetails.setText(context.getString(R.string.transaction_id, transactionId));
+        transactionDetails.setVisibility(android.view.View.VISIBLE);
+        
+        okButton.setBackgroundColor(Color.parseColor("#FF9800"));
         okButton.setText(context.getString(R.string.ok));
         okButton.setOnClickListener(v -> dialog.dismiss());
         

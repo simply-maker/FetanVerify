@@ -10,13 +10,14 @@
     <string name="verify">አረጋግጥ</string>
     <string name="scan_qr">QR ስካን</string>
     <string name="import_qr_image">QR ምስል አስመጣ</string>
-    <string name="scan_sms">SMS ስካን</string>
     <string name="enter_ft_id">FT መለያ ያስገቡ</string>
     <string name="history">ታሪክ</string>
     <string name="verifying">በማረጋገጥ ላይ...</string>
     <string name="verification_result">የማረጋገጫ ውጤት</string>
     <string name="privacy_security">🔒 ግላዊነት እና ደህንነት</string>
     <string name="privacy_message">ፈተን ማረጋገጫ የእርስዎን የግብይት መረጃ ለመጠበቅ የላቀ ምስጠራ ይጠቀማል። ሁሉም ማረጋገጫዎች በFirebase በኩል በአስተማማኝ ሁኔታ ይሰራሉ፣ ይህም የእርስዎ የገንዘብ መረጃ ግላዊ እና የተጠበቀ መሆኑን ያረጋግጣል።</string>
+    <string name="already_verified">ቀድሞ ተረጋግጧል</string>
+    <string name="transaction_already_verified">ይህ ግብይት ቀደም ሲል ተረጋግጧል።</string>
     
     <!-- Login Activity -->
     <string name="secure_transaction_verification">ደህንነቱ የተጠበቀ የግብይት ማረጋገጫ</string>
@@ -67,17 +68,13 @@
     <string name="no_qr_found">በምስሉ ውስጥ ምንም QR ኮድ አልተገኘም</string>
     <string name="error_processing_image">ምስሉን በማስኬድ ላይ ስህተት</string>
     <string name="scan_qr_code">QR ኮድ ስካን</string>
-    <string name="scan_sms_text">SMS ጽሁፍ ስካን</string>
-    <string name="scan_sms_screenshot">FT መለያ ለማውጣት ካሜራውን በስክሪኑ ላይ ባለው SMS ጽሁፍ መልእክት ላይ ያነጣጥሩ</string>
-    <string name="no_ft_found_in_sms">በSMS ጽሁፍ ውስጥ ምንም FT መለያ አልተገኘም</string>
     <string name="scanning_options">የስካን አማራጮች</string>
     <string name="no_transaction_id_found">በተሰካነው መረጃ ውስጥ ምንም የግብይት መለያ አልተገኘም</string>
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR ማረጋገጫ አልተሳካም</string>
-    <string name="qr_failed_message">የQR ኮድ ማረጋገጫ አልተሳካም። እባክዎ ደንበኛውን ከቴሌብር SMS የFT መለያቸውን እንዲሰጡዎት ይጠይቁ ወይም የSMS ጽሁፋቸውን ይስካኑ።</string>
+    <string name="qr_failed_message">የQR ኮድ ማረጋገጫ አልተሳካም። እባክዎ የቴሌብር SMS ውስጥ ያለውን FT መለያ ይፈልጉ እና ከታች ያስገቡ።</string>
     <string name="enter_ft_manually">FT መለያ በእጅ ያስገቡ</string>
-    <string name="scan_sms_for_ft">ለFT መለያ SMS ስካን</string>
     <string name="ft_id_hint">FT መለያ ያስገቡ (ለምሳሌ፣ FT1234567890)</string>
     <string name="invalid_ft_format">ልክ ያልሆነ FT መለያ ቅርጸት። እባክዎ ትክክለኛ FT መለያ ያስገቡ።</string>
     

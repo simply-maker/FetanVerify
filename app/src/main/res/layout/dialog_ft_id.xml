@@ -23,7 +23,7 @@
         android:id="@+id/dialogMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/qr_failed_message"
+        android:text="QR code verification failed. Please check your Telebirr SMS for the FT transaction ID and enter it below."
         android:textSize="14sp"
         android:textColor="@color/text_secondary"
         android:gravity="center"
@@ -63,19 +63,6 @@
         android:layout_marginBottom="12dp"
         app:icon="@android:drawable/ic_menu_edit"
         app:iconTint="@color/white" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/scanSmsButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/scan_sms_for_ft"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        app:strokeColor="@color/primary_green"
-        android:textColor="@color/primary_green"
-        android:layout_marginBottom="12dp"
-        app:cornerRadius="12dp"
-        app:icon="@android:drawable/ic_menu_camera"
-        app:iconTint="@color/primary_green" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/cancelButton"
