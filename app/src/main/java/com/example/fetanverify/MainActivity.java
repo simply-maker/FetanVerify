@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Apply language before setting content view
         LanguageHelper.applyLanguage(this);
-        
+
         // Initialize SMS text extractor
         SMSTextExtractor.initialize();
 
@@ -410,19 +410,22 @@ public class MainActivity extends AppCompatActivity {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "Database query completed. Data exists: " + dataSnapshot.exists());
+                Log.d(TAG, "Database query completed for transaction ID: " + transactionId);
+                Log.d(TAG, "DataSnapshot exists: " + dataSnapshot.exists());
+                Log.d(TAG, "DataSnapshot content: " + dataSnapshot.getValue());
                 showLoading(false);
                 if (dataSnapshot.exists()) {
+                    Log.d(TAG, "Found matching transaction in database for ID: " + transactionId);
                     handleVerificationResult(dataSnapshot, transactionId);
                 } else {
-                    Log.d(TAG, "No match found for transaction ID: " + transactionId);
+                    Log.w(TAG, "No match found in database for transaction ID: " + transactionId);
                     handleVerificationFailure(transactionId);
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, "Database error: " + databaseError.getMessage());
+                Log.e(TAG, "Database query failed for transaction ID: " + transactionId + ", Error: " + databaseError.getMessage());
                 showLoading(false);
                 TextView resultTextView = findViewById(R.id.resultTextView);
                 resultCard.setVisibility(View.VISIBLE);
@@ -514,7 +517,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Show FT dialog for any transaction that fails verification
         if (transactionId != null && (TransactionExtractor.isCHFormat(transactionId) || TransactionExtractor.isFTFormat(transactionId))) {
-            Log.d(TAG, "CH format transaction failed verification, showing FT dialog");
+            Log.d(TAG, "CH or FT format transaction failed verification, showing FT dialog");
             showFTIdDialog();
         } else {
             // For unknown format or null transaction ID, also show FT dialog
@@ -522,7 +525,7 @@ public class MainActivity extends AppCompatActivity {
             showFTIdDialog();
         }
     }
-    
+
     /**
      * Show alert message to user
      */
