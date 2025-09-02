@@ -20,8 +20,6 @@
     <string name="transaction_already_verified">ይህ ግብይት ቀደም ሲል ተረጋግጧል።</string>
     <string name="new_verification">አዲስ ማረጋገጫ</string>
     <string name="previously_verified">ቀደም ሲል ተረጋግጧል</string>
-    <string name="verified_by">የተረጋገጠው በ: %s</string>
-    <string name="user_email">ተጠቃሚ: %s</string>
     
     <!-- Login Activity -->
     <string name="secure_transaction_verification">ደህንነቱ የተጠበቀ የግብይት ማረጋገጫ</string>

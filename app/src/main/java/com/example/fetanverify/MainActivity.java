@@ -489,9 +489,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (!verifiedTransactionIds.contains(transactionId)) {
             FirebaseUser currentUser = mAuth.getCurrentUser();
-            String userEmail = currentUser != null ? currentUser.getEmail() : "N/A";
             HistoryItem item = new HistoryItem(transactionId, getString(R.string.verified), timestamp, 
-                amount != null ? amount : "N/A", sender, userEmail, userEmail);
+                amount != null ? amount : "N/A", sender);
             historyList.add(0, item);
             verifiedTransactionIds.add(transactionId);
             saveHistoryToPrefs();
@@ -506,9 +505,7 @@ public class MainActivity extends AppCompatActivity {
                 getString(R.string.timestamp, timestamp != null ? timestamp : "N/A");
         resultTextView.setText(resultText);
 
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        String userEmail = currentUser != null ? currentUser.getEmail() : "N/A";
-        VerificationPopup.showSuccessPopup(MainActivity.this, transactionId, sender, timestamp, amount, userEmail);
+        VerificationPopup.showSuccessPopup(MainActivity.this, transactionId, sender, timestamp, amount);
         Log.d(TAG, "Verification successful for: " + transactionId);
     }
 

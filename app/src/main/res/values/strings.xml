@@ -19,8 +19,6 @@
     <string name="transaction_already_verified">This transaction has already been verified previously.</string>
     <string name="new_verification">New Verification</string>
     <string name="previously_verified">Previously Verified</string>
-    <string name="verified_by">Verified by: %s</string>
-    <string name="user_email">User: %s</string>
     
     <!-- Login Activity -->
     <string name="secure_transaction_verification">Secure Transaction Verification</string>

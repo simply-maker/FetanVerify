@@ -18,7 +18,7 @@ import android.util.Log;
 
 public class VerificationPopup {
     
-    public static void showSuccessPopup(Context context, String transactionId, String sender, String timestamp, String amount, String userEmail) {
+    public static void showSuccessPopup(Context context, String transactionId, String sender, String timestamp, String amount) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.popup_verification_result);
@@ -44,8 +44,7 @@ public class VerificationPopup {
         String details = context.getString(R.string.transaction_id, transactionId) + "\n" +
                         context.getString(R.string.sender, sender) + "\n" +
                         context.getString(R.string.amount, amount != null ? amount : "N/A") + "\n" +
-                        context.getString(R.string.timestamp, timestamp) + "\n" +
-                        "Verified by: " + (userEmail != null ? userEmail : "N/A");
+                        context.getString(R.string.timestamp, timestamp);
         transactionDetails.setText(details);
         transactionDetails.setVisibility(android.view.View.VISIBLE);
         
@@ -108,8 +107,7 @@ public class VerificationPopup {
                             return context.getString(R.string.transaction_id, transactionId) + "\n" +
                                    context.getString(R.string.sender, item.getSender()) + "\n" +
                                    context.getString(R.string.amount, item.getAmount()) + "\n" +
-                                   context.getString(R.string.timestamp, item.getTimestamp()) + "\n" +
-                                   "Verified by: " + (item.getVerifiedBy() != null ? item.getVerifiedBy() : "N/A");
+                                   context.getString(R.string.timestamp, item.getTimestamp());
                         }
                     }
                 }
