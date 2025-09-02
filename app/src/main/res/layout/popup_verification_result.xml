@@ -44,7 +44,7 @@
         android:textColor="@color/text_primary"
         android:fontFamily="monospace"
         android:layout_marginBottom="32dp"
-        android:visibility="gone"
+        android:visibility="visible"
         android:lineSpacingExtra="4dp" />
 
     <com.google.android.material.button.MaterialButton

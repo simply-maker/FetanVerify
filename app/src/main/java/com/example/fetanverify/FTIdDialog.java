@@ -43,7 +43,7 @@ public class FTIdDialog {
         MaterialButton cancelButton = dialog.findViewById(R.id.cancelButton);
 
         titleText.setText(R.string.qr_verification_failed);
-        messageText.setText("QR code verification failed. Please check your Telebirr SMS for the FT transaction ID and enter it below.");
+        messageText.setText(R.string.qr_failed_message);
         
         // Set input to always uppercase
         ftIdEditText.setFilters(new android.text.InputFilter[] {

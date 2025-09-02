@@ -9,6 +9,12 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.google.android.material.button.MaterialButton;
+import android.content.SharedPreferences;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.util.ArrayList;
+import java.lang.reflect.Type;
+import android.util.Log;
 
 public class VerificationPopup {
     
@@ -69,11 +75,13 @@ public class VerificationPopup {
         
         statusIcon.setImageResource(R.drawable.ic_check_circle);
         statusIcon.setColorFilter(Color.parseColor("#FF9800")); // Orange color for already verified
-        statusTitle.setText("Already Verified");
+        statusTitle.setText(context.getString(R.string.already_verified));
         statusTitle.setTextColor(Color.parseColor("#FF9800"));
-        statusMessage.setText("This transaction has already been verified previously.");
+        statusMessage.setText(context.getString(R.string.transaction_already_verified));
         
-        transactionDetails.setText(context.getString(R.string.transaction_id, transactionId));
+        // Get additional details from history
+        String details = getTransactionDetailsFromHistory(context, transactionId);
+        transactionDetails.setText(details);
         transactionDetails.setVisibility(android.view.View.VISIBLE);
         
         okButton.setBackgroundColor(Color.parseColor("#FF9800"));
@@ -81,6 +89,38 @@ public class VerificationPopup {
         okButton.setOnClickListener(v -> dialog.dismiss());
         
         dialog.show();
+    }
+
+    private static String getTransactionDetailsFromHistory(Context context, String transactionId) {
+        // Try to get details from SharedPreferences history
+        SharedPreferences historyPrefs = context.getSharedPreferences("HistoryPrefs", Context.MODE_PRIVATE);
+        String historyJson = historyPrefs.getString("historyList", "");
+        
+        if (!historyJson.isEmpty()) {
+            try {
+                Gson gson = new Gson();
+                Type type = new TypeToken<ArrayList<HistoryItem>>(){}.getType();
+                ArrayList<HistoryItem> historyList = gson.fromJson(historyJson, type);
+                
+                if (historyList != null) {
+                    for (HistoryItem item : historyList) {
+                        if (transactionId.equals(item.getTransactionId())) {
+                            return context.getString(R.string.transaction_id, transactionId) + "\n" +
+                                   context.getString(R.string.sender, item.getSender()) + "\n" +
+                                   context.getString(R.string.amount, item.getAmount()) + "\n" +
+                                   context.getString(R.string.timestamp, item.getTimestamp()) + "\n" +
+                                   "Verified by: " + (item.getVerifiedBy() != null ? item.getVerifiedBy() : "N/A");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Log.e("VerificationPopup", "Error parsing history: " + e.getMessage());
+            }
+        }
+        
+        // Fallback if not found in history
+        return context.getString(R.string.transaction_id, transactionId) + "\n" +
+               "Status: " + context.getString(R.string.already_verified);
     }
 
     public static void showErrorPopup(Context context, String transactionId) {

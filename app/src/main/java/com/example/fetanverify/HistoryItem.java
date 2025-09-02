@@ -9,23 +9,32 @@ public class HistoryItem implements Parcelable {
     private String timestamp;
     private String amount;
     private String sender;
+    private String verifiedBy;
+    private String userEmail;
 
-    public HistoryItem(String transactionId, String status, String timestamp, String amount, String sender) {
+    public HistoryItem(String transactionId, String status, String timestamp, String amount, String sender, String verifiedBy, String userEmail) {
         this.transactionId = transactionId;
         this.status = status;
         this.timestamp = timestamp;
         this.amount = amount;
         this.sender = sender;
+        this.verifiedBy = verifiedBy;
+        this.userEmail = userEmail;
+    }
+
+    // Constructor with verifiedBy but no userEmail (for backward compatibility)
+    public HistoryItem(String transactionId, String status, String timestamp, String amount, String sender, String verifiedBy) {
+        this(transactionId, status, timestamp, amount, sender, verifiedBy, null);
     }
 
     // Constructor with amount but no sender (for backward compatibility)
     public HistoryItem(String transactionId, String status, String timestamp, String amount) {
-        this(transactionId, status, timestamp, amount, null);
+        this(transactionId, status, timestamp, amount, null, null, null);
     }
 
     // Legacy constructor for backward compatibility
     public HistoryItem(String transactionId, String status, String timestamp) {
-        this(transactionId, status, timestamp, "N/A", null);
+        this(transactionId, status, timestamp, "N/A", null, null, null);
     }
 
     protected HistoryItem(Parcel in) {
@@ -34,6 +43,8 @@ public class HistoryItem implements Parcelable {
         timestamp = in.readString();
         amount = in.readString();
         sender = in.readString();
+        verifiedBy = in.readString();
+        userEmail = in.readString();
     }
 
     public static final Creator<HistoryItem> CREATOR = new Creator<HistoryItem>() {
@@ -68,6 +79,14 @@ public class HistoryItem implements Parcelable {
         return sender != null ? sender : "N/A";
     }
 
+    public String getVerifiedBy() {
+        return verifiedBy != null ? verifiedBy : "N/A";
+    }
+
+    public String getUserEmail() {
+        return userEmail != null ? userEmail : "N/A";
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -80,5 +99,7 @@ public class HistoryItem implements Parcelable {
         dest.writeString(timestamp);
         dest.writeString(amount);
         dest.writeString(sender);
+        dest.writeString(verifiedBy);
+        dest.writeString(userEmail);
     }
 }

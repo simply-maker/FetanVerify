@@ -17,6 +17,10 @@
     <string name="privacy_message">FetanVerify uses advanced encryption to protect your transaction data. All verifications are processed securely through Firebase, ensuring your financial information remains private and protected.</string>
     <string name="already_verified">Already Verified</string>
     <string name="transaction_already_verified">This transaction has already been verified previously.</string>
+    <string name="new_verification">New Verification</string>
+    <string name="previously_verified">Previously Verified</string>
+    <string name="verified_by">Verified by: %s</string>
+    <string name="user_email">User: %s</string>
     
     <!-- Login Activity -->
     <string name="secure_transaction_verification">Secure Transaction Verification</string>
@@ -72,7 +76,7 @@
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR Verification Failed</string>
-    <string name="qr_failed_message">QR code verification failed. Please check your Telebirr SMS for the FT transaction ID and enter it below.</string>
+    <string name="qr_failed_message">Please check your Telebirr SMS for the FT transaction ID and enter it below.</string>
     <string name="enter_ft_manually">Enter FT ID Manually</string>
     <string name="ft_id_hint">Enter FT ID (e.g., FT25223YZCK7)</string>
     <string name="invalid_ft_format">Invalid FT ID format. Please enter a valid FT ID.</string>

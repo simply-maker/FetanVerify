@@ -36,6 +36,9 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         if (item.getSender() != null && !item.getSender().equals("N/A")) {
             timestampText += "\n" + context.getString(R.string.sender, item.getSender());
         }
+        if (item.getVerifiedBy() != null && !item.getVerifiedBy().equals("N/A")) {
+            timestampText += "\n" + context.getString(R.string.verified_by, item.getVerifiedBy());
+        }
         holder.timestampTextView.setText(timestampText);
         
         // Set colors based on status

@@ -18,6 +18,10 @@
     <string name="privacy_message">ፈተን ማረጋገጫ የእርስዎን የግብይት መረጃ ለመጠበቅ የላቀ ምስጠራ ይጠቀማል። ሁሉም ማረጋገጫዎች በFirebase በኩል በአስተማማኝ ሁኔታ ይሰራሉ፣ ይህም የእርስዎ የገንዘብ መረጃ ግላዊ እና የተጠበቀ መሆኑን ያረጋግጣል።</string>
     <string name="already_verified">ቀድሞ ተረጋግጧል</string>
     <string name="transaction_already_verified">ይህ ግብይት ቀደም ሲል ተረጋግጧል።</string>
+    <string name="new_verification">አዲስ ማረጋገጫ</string>
+    <string name="previously_verified">ቀደም ሲል ተረጋግጧል</string>
+    <string name="verified_by">የተረጋገጠው በ: %s</string>
+    <string name="user_email">ተጠቃሚ: %s</string>
     
     <!-- Login Activity -->
     <string name="secure_transaction_verification">ደህንነቱ የተጠበቀ የግብይት ማረጋገጫ</string>

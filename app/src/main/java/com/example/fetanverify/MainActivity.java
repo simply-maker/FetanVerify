@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int SCAN_REQUEST_CODE = 0x0000c0de;
     private TextInputEditText transactionIdEditText;
     private TextInputLayout textInputLayout;
-    private MaterialButton verifyButton, scanButton, historyButton, importImageButton, scanSmsButton, languageButton;
+    private MaterialButton verifyButton, scanButton, historyButton, importImageButton, languageButton;
     private ProgressBar progressBar;
     private CardView resultCard;
     private DatabaseReference databaseReference;
@@ -75,14 +75,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Clean up SMS text extractor
-        SMSTextExtractor.cleanup();
 
         // Apply language before setting content view
         LanguageHelper.applyLanguage(this);
-
-        // Initialize SMS text extractor
-        SMSTextExtractor.initialize();
 
         setContentView(R.layout.activity_main);
 
@@ -140,8 +135,7 @@ public class MainActivity extends AppCompatActivity {
                                     verifyTransaction(extractedId);
                                 } else {
                                     Log.w(TAG, "No transaction ID found in QR scan result");
-                                    // Show error message and FT dialog for failed QR scans
-                                    showAlert("QR code scanned but no valid transaction ID found. Please try manual entry or SMS scan.", "error");
+                                    showAlert("QR code scanned but no valid transaction ID found. Please enter FT ID manually.", "error");
                                     showFTIdDialog();
                                 }
                             } catch (Exception e) {
@@ -261,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
             
             Log.d(TAG, "Bitmap loaded successfully, size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
             
-            // First try QR code detection
+            // Only try QR code detection - removed OCR for performance
             String qrContent = decodeQRCode(bitmap);
             Log.d(TAG, "QR content decoded: " + qrContent);
             
@@ -275,38 +269,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             
-            // If QR code detection fails, try OCR on the image
-            Log.d(TAG, "QR detection failed, trying OCR...");
-            SMSTextExtractor.extractTextFromBitmap(bitmap)
-                .thenAccept(extractedText -> {
-                    runOnUiThread(() -> {
-                        showLoading(false);
-                        if (extractedText != null && !extractedText.trim().isEmpty()) {
-                            String extractedId = TransactionExtractor.extractTransactionId(extractedText);
-                            if (extractedId != null && TransactionExtractor.isValidTransactionId(extractedId)) {
-                                transactionIdEditText.setText(extractedId);
-                                verifyTransaction(extractedId);
-                            } else {
-                                Log.w(TAG, "No transaction ID found in OCR text");
-                                showAlert("No valid transaction ID found in the image", "error");
-                                showFTIdDialog();
-                            }
-                        } else {
-                            Log.w(TAG, "No text extracted from image");
-                            showAlert("No text found in the image", "error");
-                            showFTIdDialog();
-                        }
-                    });
-                })
-                .exceptionally(throwable -> {
-                    runOnUiThread(() -> {
-                        showLoading(false);
-                        Log.e(TAG, "OCR processing failed: " + throwable.getMessage());
-                        showAlert("Failed to process image", "error");
-                        showFTIdDialog();
-                    });
-                    return null;
-                });
+            // If QR detection fails, show FT dialog
+            Log.w(TAG, "No QR code found in image");
+            showLoading(false);
+            showAlert("No QR code found in the image. Please enter FT ID manually.", "error");
+            showFTIdDialog();
                 
         } catch (IOException e) {
             Log.e(TAG, "Error loading image: " + e.getMessage(), e);
@@ -321,163 +288,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void processImageWithFallback(Bitmap bitmap) {
-        // First try QR code detection
-        String qrContent = decodeQRCode(bitmap);
-        if (qrContent != null) {
-            String extractedId = TransactionExtractor.extractTransactionId(qrContent.trim());
-            if (extractedId != null && TransactionExtractor.isValidTransactionId(extractedId)) {
-                runOnUiThread(() -> {
-                    showLoading(false);
-                    transactionIdEditText.setText(extractedId);
-                    verifyTransaction(extractedId);
-                });
-                return;
-            }
-        }
-        
-        // If QR fails, try OCR
-        SMSTextExtractor.extractTextFromBitmap(bitmap)
-            .thenAccept(extractedText -> {
-                runOnUiThread(() -> {
-                    showLoading(false);
-                    if (extractedText != null && !extractedText.trim().isEmpty()) {
-                        String extractedId = TransactionExtractor.extractTransactionId(extractedText);
-                        if (extractedId != null && TransactionExtractor.isValidTransactionId(extractedId)) {
-                            transactionIdEditText.setText(extractedId);
-                            verifyTransaction(extractedId);
-                        } else {
-                            showAlert("No valid transaction ID found in the image", "error");
-                            showFTIdDialog();
-                        }
-                    } else {
-                        showAlert("No text found in the image", "error");
-                        showFTIdDialog();
-                    }
-                });
-            })
-            .exceptionally(throwable -> {
-                runOnUiThread(() -> {
-                    showLoading(false);
-                    showAlert("Failed to process image", "error");
-                    showFTIdDialog();
-                });
-                return null;
-            });
-    }
-
-    private void legacyProcessQRImageFromUri(Uri imageUri) {
-        try {
-            Log.d(TAG, "Processing QR image from URI (legacy): " + imageUri);
-            showLoading(true);
-            
-            Bitmap bitmap;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
-                bitmap = ImageDecoder.decodeBitmap(source);
-            } else {
-                // Fallback for older Android versions
-                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-            }
-            
-            Log.d(TAG, "Bitmap loaded successfully, size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-            
-            // Process with fallback strategy
-            processImageWithFallback(bitmap);
-            
-        } catch (IOException e) {
-            Log.e(TAG, "Error loading image: " + e.getMessage(), e);
-            showLoading(false);
-            showAlert("Error loading image: " + e.getMessage(), "error");
-            showFTIdDialog();
-        } catch (Exception e) {
-            Log.e(TAG, "Unexpected error processing image: " + e.getMessage(), e);
-            showLoading(false);
-            showAlert("Unexpected error: " + e.getMessage(), "error");
-            showFTIdDialog();
-        }
-    }
-
-    private void oldProcessQRImageFromUri(Uri imageUri) {
-        try {
-            Log.d(TAG, "Processing QR image from URI: " + imageUri);
-            showLoading(true);
-            
-            Bitmap bitmap;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
-                bitmap = ImageDecoder.decodeBitmap(source);
-            } else {
-                // Fallback for older Android versions
-                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-            }
-            
-            Log.d(TAG, "Bitmap loaded successfully, size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-            String qrContent = decodeQRCode(bitmap);
-            Log.d(TAG, "QR content decoded: " + qrContent);
-            if (qrContent != null) {
-                String extractedId = TransactionExtractor.extractTransactionId(qrContent.trim());
-                Log.d(TAG, "Extracted transaction ID: " + extractedId);
-                if (extractedId != null && TransactionExtractor.isValidTransactionId(extractedId)) {
-                    transactionIdEditText.setText(extractedId);
-                    verifyTransaction(extractedId);
-                } else {
-                    Log.w(TAG, "No transaction ID found in QR image");
-                    showAlert("QR image processed but no valid transaction ID found", "error");
-                    showFTIdDialog();
-                }
-            } else {
-                Log.w(TAG, "No QR code found in image");
-                // Try OCR as fallback
-                Log.d(TAG, "Trying OCR as fallback...");
-                SMSTextExtractor.extractTextFromBitmap(bitmap)
-                    .thenAccept(extractedText -> {
-                        runOnUiThread(() -> {
-                            showLoading(false);
-                            if (extractedText != null && !extractedText.trim().isEmpty()) {
-                                String extractedId = TransactionExtractor.extractTransactionId(extractedText);
-                                if (extractedId != null && TransactionExtractor.isValidTransactionId(extractedId)) {
-                                    transactionIdEditText.setText(extractedId);
-                                    verifyTransaction(extractedId);
-                                } else {
-                                    showAlert("No valid transaction ID found in the image", "error");
-                                    showFTIdDialog();
-                                }
-                            } else {
-                                showAlert("No QR code or text found in the image", "error");
-                                showFTIdDialog();
-                            }
-                        });
-                    })
-                    .exceptionally(throwable -> {
-                        runOnUiThread(() -> {
-                            showLoading(false);
-                            showAlert("Failed to process image", "error");
-                            showFTIdDialog();
-                        });
-                        return null;
-                    });
-                return; // Don't execute the finally block yet
-            }
-        } catch (IOException e) {
-            Log.e(TAG, "Error processing image: " + e.getMessage(), e);
-            showLoading(false);
-            showAlert("Error processing image: " + e.getMessage(), "error");
-            showFTIdDialog();
-        } catch (Exception e) {
-            Log.e(TAG, "Unexpected error: " + e.getMessage(), e);
-            showLoading(false);
-            showAlert("Unexpected error: " + e.getMessage(), "error");
-            showFTIdDialog();
-        }
-    }
 
     private String decodeQRCode(Bitmap bitmap) {
         try {
             Log.d(TAG, "Attempting to decode QR code from bitmap");
+            
+            // Optimize bitmap for QR scanning
+            Bitmap optimizedBitmap = optimizeBitmapForQR(bitmap);
+            
             int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
-            bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-            RGBLuminanceSource source = new RGBLuminanceSource(bitmap.getWidth(), bitmap.getHeight(), pixels);
+            optimizedBitmap.getPixels(pixels, 0, optimizedBitmap.getWidth(), 0, 0, optimizedBitmap.getWidth(), optimizedBitmap.getHeight());
+            RGBLuminanceSource source = new RGBLuminanceSource(optimizedBitmap.getWidth(), optimizedBitmap.getHeight(), pixels);
             BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
             Result result = new MultiFormatReader().decode(binaryBitmap);
             String qrText = result.getText();
@@ -486,6 +307,27 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Error decoding QR code: " + e.getMessage());
             return null;
+        }
+    }
+
+    private Bitmap optimizeBitmapForQR(Bitmap originalBitmap) {
+        try {
+            // Scale bitmap if too large for better performance
+            int maxSize = 1024;
+            int width = originalBitmap.getWidth();
+            int height = originalBitmap.getHeight();
+            
+            if (width > maxSize || height > maxSize) {
+                float scale = Math.min((float) maxSize / width, (float) maxSize / height);
+                int newWidth = Math.round(width * scale);
+                int newHeight = Math.round(height * scale);
+                return Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true);
+            }
+            
+            return originalBitmap;
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to optimize bitmap: " + e.getMessage());
+            return originalBitmap;
         }
     }
 
@@ -555,6 +397,15 @@ public class MainActivity extends AppCompatActivity {
         if (verifiedTransactionIds.contains(transactionId.toUpperCase())) {
             Log.d(TAG, "Transaction already verified: " + transactionId);
             showLoading(false);
+            
+            // Show different result text for already verified
+            TextView resultTextView = findViewById(R.id.resultTextView);
+            resultCard.setVisibility(View.VISIBLE);
+            String resultText = "⚠️ " + getString(R.string.already_verified) + "\n" +
+                    getString(R.string.transaction_id, transactionId) + "\n" +
+                    getString(R.string.status, getString(R.string.previously_verified));
+            resultTextView.setText(resultText);
+            
             VerificationPopup.showAlreadyVerifiedPopup(this, transactionId);
             return;
         }
@@ -637,7 +488,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!verifiedTransactionIds.contains(transactionId)) {
-            HistoryItem item = new HistoryItem(transactionId, getString(R.string.verified), timestamp, amount != null ? amount : "N/A", sender);
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            String userEmail = currentUser != null ? currentUser.getEmail() : "N/A";
+            HistoryItem item = new HistoryItem(transactionId, getString(R.string.verified), timestamp, 
+                amount != null ? amount : "N/A", sender, userEmail, userEmail);
             historyList.add(0, item);
             verifiedTransactionIds.add(transactionId);
             saveHistoryToPrefs();
@@ -645,14 +499,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         resultCard.setVisibility(View.VISIBLE);
-        String resultText = getString(R.string.verified) + "\n" +
+        String resultText = "✅ " + getString(R.string.new_verification) + "\n" +
                 getString(R.string.transaction_id, transactionId) + "\n" +
                 getString(R.string.sender, sender != null ? sender : "N/A") + "\n" +
                 getString(R.string.amount, amount != null ? amount : "N/A") + "\n" +
                 getString(R.string.timestamp, timestamp != null ? timestamp : "N/A");
         resultTextView.setText(resultText);
 
-        VerificationPopup.showSuccessPopup(MainActivity.this, transactionId, sender, timestamp, amount, currentUser.getEmail());
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        String userEmail = currentUser != null ? currentUser.getEmail() : "N/A";
+        VerificationPopup.showSuccessPopup(MainActivity.this, transactionId, sender, timestamp, amount, userEmail);
         Log.d(TAG, "Verification successful for: " + transactionId);
     }
 
