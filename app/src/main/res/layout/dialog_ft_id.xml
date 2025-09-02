@@ -25,10 +25,13 @@
         android:layout_height="wrap_content"
         android:text="@string/qr_failed_message"
         android:textSize="14sp"
-        android:textColor="@color/text_secondary"
+        android:textColor="@color/primary_green"
+        android:textStyle="bold"
         android:gravity="center"
         android:layout_marginBottom="24dp"
-        android:lineSpacingExtra="4dp" />
+        android:lineSpacingExtra="4dp"
+        android:background="@drawable/privacy_background"
+        android:padding="12dp" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/ftIdLayout"

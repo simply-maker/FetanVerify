@@ -35,9 +35,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
+                android:textColor="@color/payment_date_highlight"
                 android:textStyle="bold"
                 android:background="@drawable/status_background"
-                android:paddingHorizontal="8dp"
+                android:ellipsize="end"
+                android:background="@drawable/payment_date_background"
+                android:padding="8dp"
+                android:layout_marginTop="4dp" />
                 android:paddingVertical="4dp" />
         </LinearLayout>
 

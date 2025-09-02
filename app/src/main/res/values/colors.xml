@@ -26,6 +26,8 @@
     <color name="success_green">#1DB584</color>
     <color name="error_red">#E53E3E</color>
     <color name="warning_orange">#FF8A00</color>
+    <color name="info_blue">#2196F3</color>
+    <color name="payment_date_highlight">#4CAF50</color>
     
     <!-- Standard Colors -->
     <color name="black">#FF000000</color>

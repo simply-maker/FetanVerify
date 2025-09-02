@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<HistoryItem> historyList;
     private Set<String> verifiedTransactionIds;
     private FirebaseAuth mAuth;
+    private DatabaseManager databaseManager;
     private ActivityResultLauncher<Intent> scanLauncher;
     private ActivityResultLauncher<Intent> imageLauncher;
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault());
@@ -102,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         setupDatabase();
         loadHistoryFromPrefs();
         loadGlobalVerifiedIds();
+        databaseManager = new DatabaseManager();
         setupLaunchers();
         setupClickListeners();
     }
@@ -423,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Check if already verified
+        // Check if already verified locally
         String upperTransactionId = transactionId.toUpperCase();
         if (verifiedTransactionIds.contains(upperTransactionId)) {
             Log.d(TAG, "Transaction already verified: " + transactionId);
@@ -444,26 +446,72 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Starting verification for transaction ID: " + transactionId);
         showLoading(true);
 
+        // First check if transaction exists in database (for already verified transactions)
+        checkTransactionInDatabase(transactionId);
+    }
+
+    private void checkTransactionInDatabase(String transactionId) {
+        // First check if already verified in database
+        databaseManager.checkVerifiedTransaction(transactionId, new DatabaseManager.VerificationCallback() {
+            @Override
+            public void onVerificationResult(boolean isVerified, String sender, String timestamp, String amount, boolean isNewVerification) {
+                if (isVerified && !isNewVerification) {
+                    // Transaction already verified in database
+                    showLoading(false);
+                    
+                    // Add to local cache if not already there
+                    if (!verifiedTransactionIds.contains(transactionId.toUpperCase())) {
+                        HistoryItem item = new HistoryItem(transactionId, getString(R.string.verified), timestamp, 
+                            amount != null ? amount : "N/A", sender);
+                        historyList.add(0, item);
+                        verifiedTransactionIds.add(transactionId.toUpperCase());
+                        saveHistoryToPrefs();
+                    }
+                    
+                    TextView resultTextView = findViewById(R.id.resultTextView);
+                    resultCard.setVisibility(View.VISIBLE);
+                    String resultText = "⚠️ " + getString(R.string.already_verified) + "\n" +
+                            getString(R.string.transaction_id, transactionId) + "\n" +
+                            getString(R.string.status, getString(R.string.previously_verified));
+                    resultTextView.setText(resultText);
+                    
+                    VerificationPopup.showAlreadyVerifiedPopup(MainActivity.this, transactionId, sender, timestamp, amount);
+                } else {
+                    // Not verified yet, check SMS database
+                    checkSMSDatabase(transactionId);
+                }
+            }
+            
+            @Override
+            public void onError(String error) {
+                showLoading(false);
+                TextView resultTextView = findViewById(R.id.resultTextView);
+                resultCard.setVisibility(View.VISIBLE);
+                resultTextView.setText(getString(R.string.error) + ": " + error);
+                VerificationPopup.showErrorPopup(MainActivity.this, getString(R.string.database_error));
+            }
+        });
+    }
+    
+    private void checkSMSDatabase(String transactionId) {
         Query query = databaseReference.orderByChild("transactionId").equalTo(transactionId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "Database query completed for transaction ID: " + transactionId);
-                Log.d(TAG, "DataSnapshot exists: " + dataSnapshot.exists());
-                Log.d(TAG, "DataSnapshot content: " + dataSnapshot.getValue());
+                Log.d(TAG, "SMS Database query completed for transaction ID: " + transactionId);
                 showLoading(false);
                 if (dataSnapshot.exists()) {
-                    Log.d(TAG, "Found matching transaction in database for ID: " + transactionId);
-                    handleVerificationResult(dataSnapshot, transactionId);
+                    Log.d(TAG, "Found matching transaction in SMS database for ID: " + transactionId);
+                    handleNewVerificationResult(dataSnapshot, transactionId);
                 } else {
-                    Log.w(TAG, "No match found in database for transaction ID: " + transactionId);
+                    Log.w(TAG, "No match found in SMS database for transaction ID: " + transactionId);
                     handleVerificationFailure(transactionId);
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, "Database query failed for transaction ID: " + transactionId + ", Error: " + databaseError.getMessage());
+                Log.e(TAG, "SMS Database query failed for transaction ID: " + transactionId + ", Error: " + databaseError.getMessage());
                 showLoading(false);
                 TextView resultTextView = findViewById(R.id.resultTextView);
                 resultCard.setVisibility(View.VISIBLE);
@@ -488,7 +536,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void handleVerificationResult(DataSnapshot dataSnapshot, String transactionId) {
+    private void handleNewVerificationResult(DataSnapshot dataSnapshot, String transactionId) {
         Log.d(TAG, "Handling verification result for: " + transactionId);
         showLoading(false);
 
@@ -518,26 +566,35 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        if (!verifiedTransactionIds.contains(transactionId)) {
-            FirebaseUser currentUser = mAuth.getCurrentUser();
-            HistoryItem item = new HistoryItem(transactionId, getString(R.string.verified), timestamp, 
-                amount != null ? amount : "N/A", sender);
-            historyList.add(0, item);
-            verifiedTransactionIds.add(transactionId.toUpperCase());
-            saveHistoryToPrefs();
-            Log.d(TAG, "Added transaction to history: " + transactionId);
+        // This is a new verification from SMS database
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        HistoryItem item = new HistoryItem(transactionId, getString(R.string.verified), timestamp, 
+            amount != null ? amount : "N/A", sender);
+        historyList.add(0, item);
+        verifiedTransactionIds.add(transactionId.toUpperCase());
+        saveHistoryToPrefs();
+        
+        // Save to verified transactions database
+        Long timestampLong = null;
+        try {
+            timestampLong = dateFormat.parse(timestamp).getTime();
+        } catch (Exception e) {
+            timestampLong = System.currentTimeMillis();
         }
-
+        databaseManager.saveVerifiedTransaction(transactionId, sender, amount, timestampLong);
+        
+        Log.d(TAG, "Added new transaction to history: " + transactionId);
+        
         resultCard.setVisibility(View.VISIBLE);
         String resultText = "✅ " + getString(R.string.new_verification) + "\n" +
                 getString(R.string.transaction_id, transactionId) + "\n" +
                 getString(R.string.sender, sender != null ? sender : "N/A") + "\n" +
                 getString(R.string.amount, amount != null ? amount : "N/A") + "\n" +
-                getString(R.string.timestamp, timestamp != null ? timestamp : "N/A");
+                getString(R.string.payment_date, timestamp != null ? timestamp : "N/A");
         resultTextView.setText(resultText);
 
         VerificationPopup.showSuccessPopup(MainActivity.this, transactionId, sender, timestamp, amount);
-        Log.d(TAG, "Verification successful for: " + transactionId);
+        Log.d(TAG, "New verification successful for: " + transactionId);
     }
 
     private void handleVerificationFailure(String transactionId) {

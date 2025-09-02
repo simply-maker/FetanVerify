@@ -44,7 +44,7 @@ public class VerificationPopup {
         String details = context.getString(R.string.transaction_id, transactionId) + "\n" +
                         context.getString(R.string.sender, sender) + "\n" +
                         context.getString(R.string.amount, amount != null ? amount : "N/A") + "\n" +
-                        context.getString(R.string.timestamp, timestamp);
+                        context.getString(R.string.payment_date, timestamp);
         transactionDetails.setText(details);
         transactionDetails.setVisibility(android.view.View.VISIBLE);
         
@@ -55,7 +55,7 @@ public class VerificationPopup {
         dialog.show();
     }
 
-    public static void showAlreadyVerifiedPopup(Context context, String transactionId) {
+    public static void showAlreadyVerifiedPopup(Context context, String transactionId, String sender, String timestamp, String amount) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.popup_verification_result);
@@ -73,17 +73,20 @@ public class VerificationPopup {
         MaterialButton okButton = dialog.findViewById(R.id.okButton);
         
         statusIcon.setImageResource(R.drawable.ic_check_circle);
-        statusIcon.setColorFilter(Color.parseColor("#FF9800")); // Orange color for already verified
+        statusIcon.setColorFilter(Color.parseColor("#2196F3")); // Blue color for already verified
         statusTitle.setText(context.getString(R.string.already_verified));
-        statusTitle.setTextColor(Color.parseColor("#FF9800"));
+        statusTitle.setTextColor(Color.parseColor("#2196F3"));
         statusMessage.setText(context.getString(R.string.transaction_already_verified));
         
-        // Get additional details from history
-        String details = getTransactionDetailsFromHistory(context, transactionId);
+        // Show transaction details with proper formatting
+        String details = context.getString(R.string.transaction_id, transactionId) + "\n" +
+                        context.getString(R.string.sender, sender != null ? sender : "N/A") + "\n" +
+                        context.getString(R.string.amount, amount != null ? amount : "N/A") + "\n" +
+                        context.getString(R.string.payment_date, timestamp != null ? timestamp : "N/A");
         transactionDetails.setText(details);
         transactionDetails.setVisibility(android.view.View.VISIBLE);
         
-        okButton.setBackgroundColor(Color.parseColor("#FF9800"));
+        okButton.setBackgroundColor(Color.parseColor("#2196F3"));
         okButton.setText(context.getString(R.string.ok));
         okButton.setOnClickListener(v -> dialog.dismiss());
         
@@ -107,7 +110,7 @@ public class VerificationPopup {
                             return context.getString(R.string.transaction_id, transactionId) + "\n" +
                                    context.getString(R.string.sender, item.getSender()) + "\n" +
                                    context.getString(R.string.amount, item.getAmount()) + "\n" +
-                                   context.getString(R.string.timestamp, item.getTimestamp());
+                                   context.getString(R.string.payment_date, item.getTimestamp());
                         }
                     }
                 }

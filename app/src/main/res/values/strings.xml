@@ -50,7 +50,7 @@
     <string name="transaction_id">Transaction ID: %s</string>
     <string name="sender">Sender: %s</string>
     <string name="amount">Amount: %s</string>
-    <string name="timestamp">Timestamp: %s</string>
+    <string name="payment_date">Payment Date: %s</string>
     <string name="status">Status: %s</string>
     <string name="time">Time: %s</string>
     <string name="id">ID: %s</string>
@@ -74,8 +74,8 @@
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR Verification Failed</string>
-    <string name="qr_failed_message">Please check your Telebirr SMS for the FT transaction ID and enter it below.</string>
-    <string name="enter_ft_manually">Enter FT ID Manually</string>
+    <string name="qr_failed_message">Please ask the customer for the FT transaction ID from their Telebirr SMS message and enter it below.</string>
+    <string name="enter_ft_manually">Verify FT ID Manually</string>
     <string name="ft_id_hint">Enter FT ID (e.g., FT25223YZCK7)</string>
     <string name="invalid_ft_format">Invalid FT ID format. Please enter a valid FT ID.</string>
     

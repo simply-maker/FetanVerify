@@ -38,14 +38,15 @@
         android:id="@+id/transactionDetails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/details_background"
+        android:background="@drawable/highlighted_text_background"
         android:padding="16dp"
         android:textSize="14sp"
-        android:textColor="@color/text_primary"
+        android:textColor="@color/primary_green"
         android:fontFamily="monospace"
         android:layout_marginBottom="32dp"
         android:visibility="visible"
-        android:lineSpacingExtra="4dp" />
+        android:lineSpacingExtra="6dp"
+        android:textStyle="bold" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/okButton"

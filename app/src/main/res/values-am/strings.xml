@@ -51,7 +51,7 @@
     <string name="transaction_id">የግብይት መለያ: %s</string>
     <string name="sender">ላኪ: %s</string>
     <string name="amount">መጠን: %s</string>
-    <string name="timestamp">ጊዜ ማህተም: %s</string>
+    <string name="payment_date">የክፍያ ቀን: %s</string>
     <string name="status">ሁኔታ: %s</string>
     <string name="time">ጊዜ: %s</string>
     <string name="id">መለያ: %s</string>
@@ -75,8 +75,8 @@
     
     <!-- FT ID Dialog -->
     <string name="qr_verification_failed">QR ማረጋገጫ አልተሳካም</string>
-    <string name="qr_failed_message">የQR ኮድ ማረጋገጫ አልተሳካም። እባክዎ የቴሌብር SMS ውስጥ ያለውን FT መለያ ይፈልጉ እና ከታች ያስገቡ።</string>
-    <string name="enter_ft_manually">FT መለያ በእጅ ያስገቡ</string>
+    <string name="qr_failed_message">እባክዎ ደንበኛውን ከቴሌብር SMS መልእክት የFT ግብይት መለያ እንዲጠይቁ እና ከታች ያስገቡ።</string>
+    <string name="enter_ft_manually">FT መለያ በእጅ ያረጋግጡ</string>
     <string name="ft_id_hint">FT መለያ ያስገቡ (ለምሳሌ፣ FT1234567890)</string>
     <string name="invalid_ft_format">ልክ ያልሆነ FT መለያ ቅርጸት። እባክዎ ትክክለኛ FT መለያ ያስገቡ።</string>
     
