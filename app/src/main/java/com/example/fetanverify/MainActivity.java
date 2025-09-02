@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
                 ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
                 bitmap = ImageDecoder.decodeBitmap(source);
             } else {
-                // Fallback for older Android versions
+                // Fallback for older Android versions - using deprecated method with suppression
                 bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
             }
             

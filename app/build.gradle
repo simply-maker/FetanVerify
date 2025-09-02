@@ -7,6 +7,14 @@ android {
     namespace 'com.example.fetanverify'
     compileSdk 35
 
+    signingConfigs {
+        release {
+            storeFile file('path/to/your/keystore.jks')
+            storePassword 'your_keystore_password'
+            keyAlias 'fetanverify-key'
+            keyPassword 'your_key_password'
+        }
+    }
     defaultConfig {
         applicationId "com.example.fetanverify"
         minSdk 23
@@ -19,6 +27,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 
