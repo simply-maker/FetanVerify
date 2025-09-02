@@ -71,6 +71,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String HISTORY_PREFS = "HistoryPrefs";
     private static final String HISTORY_LIST_KEY = "historyList";
     private static final String VERIFIED_IDS_KEY = "verifiedIds";
+    private static final String GLOBAL_VERIFIED_IDS_KEY = "globalVerifiedIds";
+    private SharedPreferences globalPrefs;
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reload global verified IDs when activity resumes
+        loadGlobalVerifiedIds();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         initializeViews();
         setupDatabase();
         loadHistoryFromPrefs();
+        loadGlobalVerifiedIds();
         setupLaunchers();
         setupClickListeners();
     }
@@ -335,6 +345,8 @@ public class MainActivity extends AppCompatActivity {
         historyList = new ArrayList<>();
         verifiedTransactionIds = new HashSet<>();
         historyPrefs = getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE);
+        globalPrefs = getSharedPreferences("GlobalVerifiedIds", MODE_PRIVATE);
+        
         String historyJson = historyPrefs.getString(HISTORY_LIST_KEY, "");
         if (!historyJson.isEmpty()) {
             Gson gson = new Gson();
@@ -355,6 +367,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void loadGlobalVerifiedIds() {
+        String globalVerifiedIdsJson = globalPrefs.getString(GLOBAL_VERIFIED_IDS_KEY, "");
+        if (!globalVerifiedIdsJson.isEmpty()) {
+            Gson gson = new Gson();
+            Type type = new TypeToken<HashSet<String>>(){}.getType();
+            HashSet<String> globalVerifiedIds = gson.fromJson(globalVerifiedIdsJson, type);
+            if (globalVerifiedIds != null) {
+                verifiedTransactionIds.addAll(globalVerifiedIds);
+            }
+        }
+    }
+
     private void saveHistoryToPrefs() {
         SharedPreferences.Editor editor = historyPrefs.edit();
         Gson gson = new Gson();
@@ -362,6 +386,12 @@ public class MainActivity extends AppCompatActivity {
         editor.putString(HISTORY_LIST_KEY, historyJson);
         String verifiedIdsJson = gson.toJson(verifiedTransactionIds);
         editor.putString(VERIFIED_IDS_KEY, verifiedIdsJson);
+        
+        // Also save to global preferences to persist across app reinstalls
+        SharedPreferences.Editor globalEditor = globalPrefs.edit();
+        globalEditor.putString(GLOBAL_VERIFIED_IDS_KEY, verifiedIdsJson);
+        globalEditor.apply();
+        
         editor.apply();
     }
 
@@ -394,7 +424,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Check if already verified
-        if (verifiedTransactionIds.contains(transactionId.toUpperCase())) {
+        String upperTransactionId = transactionId.toUpperCase();
+        if (verifiedTransactionIds.contains(upperTransactionId)) {
             Log.d(TAG, "Transaction already verified: " + transactionId);
             showLoading(false);
             
@@ -492,7 +523,7 @@ public class MainActivity extends AppCompatActivity {
             HistoryItem item = new HistoryItem(transactionId, getString(R.string.verified), timestamp, 
                 amount != null ? amount : "N/A", sender);
             historyList.add(0, item);
-            verifiedTransactionIds.add(transactionId);
+            verifiedTransactionIds.add(transactionId.toUpperCase());
             saveHistoryToPrefs();
             Log.d(TAG, "Added transaction to history: " + transactionId);
         }

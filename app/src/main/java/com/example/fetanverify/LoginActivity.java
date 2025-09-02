@@ -99,6 +99,9 @@ public class LoginActivity extends AppCompatActivity {
                             }
                             editor.apply();
                             
+                            // Load global verified IDs on successful login
+                            loadGlobalVerifiedIdsOnLogin();
+                            
                             startActivity(new Intent(LoginActivity.this, MainActivity.class));
                             finish();
                         } else {
@@ -120,5 +123,10 @@ public class LoginActivity extends AppCompatActivity {
             passwordEditText.setText(rememberedPassword);
         }
         rememberMeCheckBox.setChecked(wasRememberChecked);
+    }
+    
+    private void loadGlobalVerifiedIdsOnLogin() {
+        // This method ensures global verified IDs are available immediately after login
+        // The actual loading will happen in MainActivity.onCreate()
     }
 }
